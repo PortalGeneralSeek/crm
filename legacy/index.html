@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acme Pro Components - Design System & UI Showcase</title>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Design Tokens -->
+  <link rel="stylesheet" href="./css/tokens.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            primary: {
+              DEFAULT: '#006fee',
+              50: '#e6f1fe',
+              100: '#cce3fd',
+              500: '#006fee',
+              600: '#005bc4',
+              700: '#00479b',
+            },
+            secondary: {
+              DEFAULT: '#7828c8',
+              50: '#f2eafe',
+              500: '#7828c8',
+            },
+            success: {
+              DEFAULT: '#17c964',
+              50: '#e8faf0',
+              500: '#17c964',
+            },
+            warning: {
+              DEFAULT: '#f5a524',
+              50: '#fef4e6',
+              500: '#f5a524',
+            },
+            danger: {
+              DEFAULT: '#f31260',
+              50: '#fee7ef',
+              500: '#f31260',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.4);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.7);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col bg-slate-50 dark:bg-[#0c0d0e] text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="sticky top-0 z-40 bg-white/90 dark:bg-[#121316]/90 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand & Project Meta -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-blue-400 flex items-center justify-center text-white shadow-md shadow-primary/20">
+          <i data-lucide="layers" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-lg tracking-tight">Acme Pro Components</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium border border-primary/20">Figma v2.0</span>
+          </div>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 hidden sm:block">UGv1yrGRKKFxjXMBk4tnt3 · Full Implementation</p>
+        </div>
+      </div>
+
+      <!-- Quick Search & Command Bar -->
+      <button onclick="toggleCommandMenu(true)" class="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-sm text-zinc-500 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-600 transition-all w-64 justify-between">
+        <span class="flex items-center gap-2">
+          <i data-lucide="search" class="w-4 h-4"></i>
+          <span>搜索组件或页面...</span>
+        </span>
+        <kbd class="px-1.5 py-0.5 text-xs bg-white dark:bg-zinc-700 rounded border border-zinc-200 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 font-mono">⌘K</kbd>
+      </button>
+
+      <!-- Actions: Theme Toggle, Code View, Stats -->
+      <div class="flex items-center gap-2">
+        <!-- View Source / Copy Code -->
+        <button onclick="openGlobalCodeModal()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+          <i data-lucide="code-2" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">导出代码</span>
+        </button>
+
+        <!-- Dark / Light Mode Toggle -->
+        <button id="themeToggle" onclick="toggleDarkMode()" class="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+          <i id="themeIcon" data-lucide="moon" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Figma Source Link -->
+        <a href="https://www.figma.com/design/UGv1yrGRKKFxjXMBk4tnt3/pro-components" target="_blank" class="p-2 rounded-lg bg-primary text-white hover:bg-primary-600 shadow-sm transition-all" title="打开原始 Figma 文件">
+          <i data-lucide="figma" class="w-5 h-5"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Module Tabs -->
+    <div class="border-t border-zinc-200 dark:border-zinc-800/80 bg-white/50 dark:bg-[#121316]/50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto custom-scrollbar gap-1 py-1.5">
+        <button onclick="switchTab('application')" id="tab-btn-application" class="tab-btn active px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-all">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span>1. Application (后台系统)</span>
+          <span class="text-xs px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-700 rounded-full">12组件</span>
+        </button>
+        <button onclick="switchTab('ai')" id="tab-btn-ai" class="tab-btn px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-all">
+          <i data-lucide="bot" class="w-4 h-4"></i>
+          <span>2. AI (智能对话)</span>
+          <span class="text-xs px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-700 rounded-full">5组件</span>
+        </button>
+        <button onclick="switchTab('marketing')" id="tab-btn-marketing" class="tab-btn px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-all">
+          <i data-lucide="megaphone" class="w-4 h-4"></i>
+          <span>3. Marketing (营销落地)</span>
+          <span class="text-xs px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-700 rounded-full">6组件</span>
+        </button>
+        <button onclick="switchTab('ecommerce')" id="tab-btn-ecommerce" class="tab-btn px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-all">
+          <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+          <span>4. E-commerce (电商体系)</span>
+          <span class="text-xs px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-700 rounded-full">4组件</span>
+        </button>
+        <button onclick="switchTab('charts')" id="tab-btn-charts" class="tab-btn px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-all">
+          <i data-lucide="line-chart" class="w-4 h-4"></i>
+          <span>5. Charts (图表分析)</span>
+          <span class="text-xs px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-700 rounded-full">7组件</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT CONTAINER ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+    <!-- ================= 1. APPLICATION MODULE ================= -->
+    <section id="section-application" class="tab-section space-y-8">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-zinc-200 dark:border-zinc-800 gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="p-1.5 rounded-lg bg-primary/10 text-primary"><i data-lucide="layout-dashboard" class="w-5 h-5"></i></span>
+            <span class="text-xs font-bold text-primary tracking-wider uppercase">SaaS Enterprise Suite</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-500 font-mono">v2.4.0</span>
+          </div>
+          <h2 class="text-2xl font-black tracking-tight">Application 后台管理系统</h2>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+            基于 Figma Page 3 (Application) 深度还原。集成现代 SaaS 控制台架构：全功能侧边导航、实时 KPI 看板、带批量操作的高级数据表格、即时通讯中心与多步骤向导。
+          </p>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button onclick="showToast('正在导出整套应用级 React 组件...')" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-750 transition-all flex items-center gap-1.5 shadow-xs">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> 导出规范
+          </button>
+          <button onclick="copySnippet('snippet-app-full')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-primary hover:bg-primary-600 text-white shadow-md shadow-primary/20 transition-all flex items-center gap-1.5">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i> 复制代码
+          </button>
+        </div>
+      </div>
+
+      <!-- Top Row: 4 Metric KPI Cards with Inline SVG Sparklines -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- KPI 1 -->
+        <div class="bg-white dark:bg-[#151619] p-5 rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-xs hover:border-primary/50 transition-all space-y-3 group">
+          <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+            <span>活跃组织成员</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500">
+              <i data-lucide="trending-up" class="w-3 h-3"></i> +14.2%
+            </span>
+          </div>
+          <div class="flex items-baseline justify-between">
+            <div class="text-2xl font-black text-zinc-900 dark:text-zinc-100">48,219</div>
+            <!-- Sparkline SVG -->
+            <svg class="w-20 h-8 stroke-emerald-500 fill-none" viewBox="0 0 100 40">
+              <path d="M0,35 Q20,30 40,15 T80,8 T100,2" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+            <span>较上周期增加 4,120 人</span>
+            <span class="font-mono text-zinc-500">环比 ↑</span>
+          </div>
+        </div>
+
+        <!-- KPI 2 -->
+        <div class="bg-white dark:bg-[#151619] p-5 rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-xs hover:border-primary/50 transition-all space-y-3 group">
+          <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+            <span>月度经常性收入 (MRR)</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">
+              <i data-lucide="trending-up" class="w-3 h-3"></i> +21.5%
+            </span>
+          </div>
+          <div class="flex items-baseline justify-between">
+            <div class="text-2xl font-black text-zinc-900 dark:text-zinc-100">¥348,920</div>
+            <!-- Sparkline SVG -->
+            <svg class="w-20 h-8 stroke-primary fill-none" viewBox="0 0 100 40">
+              <path d="M0,32 Q25,25 45,20 T75,10 T100,4" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+            <span>企业版付费转化率 4.8%</span>
+            <span class="font-mono text-zinc-500">超预期</span>
+          </div>
+        </div>
+
+        <!-- KPI 3 -->
+        <div class="bg-white dark:bg-[#151619] p-5 rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-xs hover:border-primary/50 transition-all space-y-3 group">
+          <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+            <span>API 服务平均延迟</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-500">
+              <i data-lucide="zap" class="w-3 h-3"></i> -18.2% 优化
+            </span>
+          </div>
+          <div class="flex items-baseline justify-between">
+            <div class="text-2xl font-black text-zinc-900 dark:text-zinc-100">24.6 <span class="text-xs font-normal text-zinc-400">ms</span></div>
+            <!-- Sparkline SVG -->
+            <svg class="w-20 h-8 stroke-purple-500 fill-none" viewBox="0 0 100 40">
+              <path d="M0,10 Q25,12 50,22 T75,32 T100,36" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+            <span>边缘 CDN 命中率 99.4%</span>
+            <span class="font-mono text-zinc-500">极速</span>
+          </div>
+        </div>
+
+        <!-- KPI 4 -->
+        <div class="bg-white dark:bg-[#151619] p-5 rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-xs hover:border-primary/50 transition-all space-y-3 group">
+          <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+            <span>平台系统 SLA</span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> 正常运行
+            </span>
+          </div>
+          <div class="flex items-baseline justify-between">
+            <div class="text-2xl font-black text-zinc-900 dark:text-zinc-100">99.99%</div>
+            <!-- Sparkline SVG -->
+            <svg class="w-20 h-8 stroke-emerald-500 fill-none" viewBox="0 0 100 40">
+              <path d="M0,15 L30,15 L35,10 L45,20 L50,15 L100,15" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+            <span>连续稳定运行 182 天</span>
+            <span class="font-mono text-zinc-500">0 事故</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Main SaaS Application Shell (Sidebar + Data Canvas) -->
+      <div class="bg-white dark:bg-[#141518] rounded-3xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-sm overflow-hidden">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 min-h-[680px]">
+          
+          <!-- Modern Pro Sidebar (Col-3) -->
+          <aside class="lg:col-span-3 border-r border-zinc-200 dark:border-zinc-800/90 p-5 flex flex-col justify-between bg-zinc-50/70 dark:bg-[#101113]">
+            
+            <div class="space-y-6">
+              
+              <!-- Workspace Brand Pill -->
+              <div class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200/90 dark:border-zinc-750 shadow-xs hover:border-primary/50 transition-all cursor-pointer">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-blue-400 text-white flex items-center justify-center font-black text-sm shadow-md shadow-primary/20">
+                    A
+                  </div>
+                  <div>
+                    <div class="font-bold text-xs text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                      <span>Acme Enterprise</span>
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    </div>
+                    <div class="text-[10px] text-zinc-400 font-mono">Workspace #942</div>
+                  </div>
+                </div>
+                <i data-lucide="chevrons-up-down" class="w-4 h-4 text-zinc-400"></i>
+              </div>
+
+              <!-- Primary Nav Group -->
+              <div class="space-y-1">
+                <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-3 mb-2">主工作区 (Navigation)</div>
+                
+                <a href="#" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-primary text-white text-xs font-semibold shadow-md shadow-primary/25">
+                  <span class="flex items-center gap-3">
+                    <i data-lucide="layout-grid" class="w-4 h-4"></i> 控制台概览 (Overview)
+                  </span>
+                  <span class="text-[10px] font-mono opacity-80">⌘1</span>
+                </a>
+
+                <a href="#" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 text-xs font-medium transition-colors">
+                  <span class="flex items-center gap-3">
+                    <i data-lucide="users" class="w-4 h-4 text-zinc-400"></i> 成员权限与组织
+                  </span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-semibold">128</span>
+                </a>
+
+                <a href="#" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 text-xs font-medium transition-colors">
+                  <span class="flex items-center gap-3">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-zinc-400"></i> 数据报表与分析
+                  </span>
+                </a>
+
+                <a href="#" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 text-xs font-medium transition-colors">
+                  <span class="flex items-center gap-3">
+                    <i data-lucide="shield" class="w-4 h-4 text-zinc-400"></i> 审计日志 & 安全
+                  </span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-500 font-semibold">PRO</span>
+                </a>
+              </div>
+
+              <!-- Pinned Projects (from Figma 92:8127) -->
+              <div class="space-y-1">
+                <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-3 mb-2">常用工程 (Recent Projects)</div>
+                <div class="space-y-0.5 text-xs text-zinc-600 dark:text-zinc-400">
+                  <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 group transition-colors">
+                    <span class="flex items-center gap-2 truncate">
+                      <span class="w-2 h-2 rounded-full bg-primary"></span> Financial Planning
+                    </span>
+                    <i data-lucide="arrow-up-right" class="w-3 h-3 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                  </a>
+                  <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 group transition-colors">
+                    <span class="flex items-center gap-2 truncate">
+                      <span class="w-2 h-2 rounded-full bg-purple-500"></span> Design Systems v2
+                    </span>
+                    <i data-lucide="arrow-up-right" class="w-3 h-3 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                  </a>
+                  <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 group transition-colors">
+                    <span class="flex items-center gap-2 truncate">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span> React 19 Engine
+                    </span>
+                    <i data-lucide="arrow-up-right" class="w-3 h-3 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                  </a>
+                </div>
+              </div>
+
+              <!-- Quota Meter Widget -->
+              <div class="p-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                <div class="flex items-center justify-between text-[11px] font-medium">
+                  <span class="text-zinc-600 dark:text-zinc-400">云存储用量</span>
+                  <span class="font-bold text-primary">78%</span>
+                </div>
+                <div class="w-full bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                  <div class="bg-gradient-to-r from-primary to-purple-500 h-full rounded-full" style="width: 78%"></div>
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-zinc-400">
+                  <span>12.4 GB / 16 GB</span>
+                  <button onclick="showToast('配额充值页面跳转中...')" class="text-primary font-semibold hover:underline">立即扩容</button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- User Footer Profile -->
+            <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800/80 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" class="w-9 h-9 rounded-xl object-cover ring-2 ring-zinc-200 dark:ring-zinc-700">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#101113] absolute -bottom-0.5 -right-0.5"></span>
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-zinc-900 dark:text-zinc-100">Sarah Jenkins</div>
+                  <div class="text-[10px] text-zinc-400">Super Admin</div>
+                </div>
+              </div>
+              <button onclick="showToast('已安全登出')" title="登出" class="p-2 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400 hover:text-danger transition-colors">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+          </aside>
+
+          <!-- Main Workspace Canvas (Col-9) -->
+          <div class="lg:col-span-9 p-6 lg:p-8 flex flex-col space-y-6">
+            
+            <!-- Top Command & Action Bar -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800/90">
+              
+              <div>
+                <nav class="flex items-center gap-2 text-[11px] text-zinc-400 mb-1">
+                  <span>工作区</span>
+                  <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                  <span>组织架构</span>
+                  <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                  <span class="text-zinc-900 dark:text-zinc-100 font-semibold">权限与成员 (Members)</span>
+                </nav>
+                <div class="flex items-center gap-3">
+                  <h3 class="text-xl font-black tracking-tight text-zinc-900 dark:text-zinc-100">成员管理与权限分配</h3>
+                  <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-semibold border border-emerald-500/20">
+                    全员双因子认证开启
+                  </span>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex items-center gap-2.5">
+                <div class="relative">
+                  <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-zinc-400"></i>
+                  <input type="text" id="tableSearchInput" onkeyup="filterTable()" placeholder="全局搜索邮箱或姓名..." class="pl-8 pr-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/80 focus:ring-2 focus:ring-primary outline-none w-52 transition-all">
+                </div>
+                <button onclick="showToast('批量导出中...')" class="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors">
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                </button>
+                <button onclick="showToast('邀请链接已生成并复制到剪贴板！', 'success')" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-primary hover:bg-primary-600 text-white shadow-md shadow-primary/20 transition-all flex items-center gap-1.5">
+                  <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> 邀请新成员
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Filter Status Pills & Floating Batch Bar Container -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              
+              <!-- Status Tabs -->
+              <div class="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs">
+                <button onclick="filterTableByStatus('all', this)" class="px-3 py-1 rounded-lg font-semibold bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-xs transition-all">
+                  全部 (128)
+                </button>
+                <button onclick="filterTableByStatus('active', this)" class="px-3 py-1 rounded-lg font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all">
+                  正常 (112)
+                </button>
+                <button onclick="filterTableByStatus('pending', this)" class="px-3 py-1 rounded-lg font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all">
+                  审核中 (12)
+                </button>
+                <button onclick="filterTableByStatus('suspended', this)" class="px-3 py-1 rounded-lg font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all">
+                  已禁用 (4)
+                </button>
+              </div>
+
+              <!-- Floating Batch Action Toolbar (revealed when selected) -->
+              <div id="batchActionBar" class="hidden items-center gap-2 bg-zinc-900 text-white dark:bg-primary dark:text-white px-3 py-1.5 rounded-xl shadow-lg animate-in fade-in zoom-in-95 duration-150 text-xs">
+                <span id="selectedRowsCount" class="font-bold">已选定 0 项</span>
+                <span class="opacity-40">|</span>
+                <button onclick="handleBatchAction('修改权限组')" class="px-2 py-0.5 rounded hover:bg-white/20 transition-colors">分配角色</button>
+                <button onclick="handleBatchAction('导出选中项')" class="px-2 py-0.5 rounded hover:bg-white/20 transition-colors">导出数据</button>
+                <button onclick="handleBatchAction('批量锁定')" class="px-2 py-0.5 rounded hover:bg-rose-500/80 transition-colors text-rose-300">禁用账户</button>
+              </div>
+
+            </div>
+
+            <!-- Pro Data Table (Node 92:9730) -->
+            <div class="border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs bg-white dark:bg-[#151619]">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs" id="membersTable">
+                  <thead class="bg-zinc-50 dark:bg-zinc-800/50 uppercase text-[10px] text-zinc-400 font-bold border-b border-zinc-200 dark:border-zinc-800 tracking-wider">
+                    <tr>
+                      <th class="p-4 w-12 text-center">
+                        <input type="checkbox" id="masterCheckbox" onchange="toggleSelectAll(this)" class="rounded text-primary focus:ring-primary">
+                      </th>
+                      <th class="p-4">姓名 / 企业邮箱</th>
+                      <th class="p-4">角色组</th>
+                      <th class="p-4">2FA 安全</th>
+                      <th class="p-4">账号状态</th>
+                      <th class="p-4">最后登录</th>
+                      <th class="p-4 text-right">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800/80">
+                    
+                    <!-- Row 1 -->
+                    <tr data-status="active" class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                      <td class="p-4 text-center">
+                        <input type="checkbox" onchange="toggleRowSelect()" class="row-checkbox rounded text-primary focus:ring-primary">
+                      </td>
+                      <td class="p-4 flex items-center gap-3">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" class="w-9 h-9 rounded-xl object-cover ring-1 ring-zinc-200 dark:ring-zinc-700">
+                        <div>
+                          <div class="font-bold text-zinc-900 dark:text-zinc-100">Jane Cooper</div>
+                          <div class="text-[11px] text-zinc-400">jane.cooper@acme.com</div>
+                        </div>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                          UI/UX Lead
+                        </span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> 已验证
+                        </span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                        </span>
+                      </td>
+                      <td class="p-4 text-zinc-500 font-mono text-[11px]">2 分钟前</td>
+                      <td class="p-4 text-right">
+                        <button onclick="showToast('编辑权限: Jane Cooper')" class="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 transition-colors">
+                          <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                        </button>
+                      </td>
+                    </tr>
+
+                    <!-- Row 2 -->
+                    <tr data-status="active" class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                      <td class="p-4 text-center">
+                        <input type="checkbox" onchange="toggleRowSelect()" class="row-checkbox rounded text-primary focus:ring-primary">
+                      </td>
+                      <td class="p-4 flex items-center gap-3">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" class="w-9 h-9 rounded-xl object-cover ring-1 ring-zinc-200 dark:ring-zinc-700">
+                        <div>
+                          <div class="font-bold text-zinc-900 dark:text-zinc-100">Alex Morgan</div>
+                          <div class="text-[11px] text-zinc-400">alex.morgan@acme.com</div>
+                        </div>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                          Core Architect
+                        </span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> 已验证
+                        </span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                        </span>
+                      </td>
+                      <td class="p-4 text-zinc-500 font-mono text-[11px]">18 分钟前</td>
+                      <td class="p-4 text-right">
+                        <button onclick="showToast('编辑权限: Alex Morgan')" class="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 transition-colors">
+                          <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                        </button>
+                      </td>
+                    </tr>
+
+                    <!-- Row 3 -->
+                    <tr data-status="pending" class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                      <td class="p-4 text-center">
+                        <input type="checkbox" onchange="toggleRowSelect()" class="row-checkbox rounded text-primary focus:ring-primary">
+                      </td>
+                      <td class="p-4 flex items-center gap-3">
+                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop" class="w-9 h-9 rounded-xl object-cover ring-1 ring-zinc-200 dark:ring-zinc-700">
+                        <div>
+                          <div class="font-bold text-zinc-900 dark:text-zinc-100">David Kim</div>
+                          <div class="text-[11px] text-zinc-400">david.kim@acme.com</div>
+                        </div>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          Growth & Marketing
+                        </span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1 text-[11px] text-amber-500 font-medium">
+                          <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> 待绑定
+                        </span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending
+                        </span>
+                      </td>
+                      <td class="p-4 text-zinc-500 font-mono text-[11px]">昨天 16:42</td>
+                      <td class="p-4 text-right">
+                        <button onclick="showToast('编辑权限: David Kim')" class="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 transition-colors">
+                          <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                        </button>
+                      </td>
+                    </tr>
+
+                    <!-- Row 4 -->
+                    <tr data-status="suspended" class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                      <td class="p-4 text-center">
+                        <input type="checkbox" onchange="toggleRowSelect()" class="row-checkbox rounded text-primary focus:ring-primary">
+                      </td>
+                      <td class="p-4 flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center font-bold text-xs text-zinc-500">
+                          ML
+                        </div>
+                        <div>
+                          <div class="font-bold text-zinc-900 dark:text-zinc-100">Marcus Lin</div>
+                          <div class="text-[11px] text-zinc-400">marcus.lin@contractor.com</div>
+                        </div>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                          External Guest
+                        </span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1 text-[11px] text-zinc-400 font-medium">
+                          <i data-lucide="minus" class="w-3.5 h-3.5"></i> 未启用
+                        </span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-500">
+                          Suspended
+                        </span>
+                      </td>
+                      <td class="p-4 text-zinc-500 font-mono text-[11px]">7 天前</td>
+                      <td class="p-4 text-right">
+                        <button onclick="showToast('编辑权限: Marcus Lin')" class="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 transition-colors">
+                          <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                        </button>
+                      </td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination Footer -->
+              <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-zinc-500">
+                <div class="flex items-center gap-2">
+                  <span>每页展示:</span>
+                  <select class="px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs">
+                    <option>10 条</option>
+                    <option selected>25 条</option>
+                    <option>50 条</option>
+                  </select>
+                  <span class="ml-2">共 128 位成员</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button class="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-400 disabled:opacity-40" disabled>上一页</button>
+                  <button class="px-3 py-1 rounded-lg bg-primary text-white font-bold">1</button>
+                  <button class="px-3 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800">2</button>
+                  <button class="px-3 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800">3</button>
+                  <span class="px-1 text-zinc-400">...</span>
+                  <button class="px-3 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800">12</button>
+                  <button class="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200">下一页</button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Bottom Split: Messaging Center (Figma 92:20380) + Authentication Card (Figma 92:10559) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              
+              <!-- Messaging Center (Col-7) -->
+              <div class="lg:col-span-7 bg-white dark:bg-[#151619] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between space-y-4">
+                
+                <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                      <i data-lucide="message-square" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <div class="text-xs font-bold text-zinc-900 dark:text-zinc-100"># design-system-team</div>
+                      <div class="text-[10px] text-zinc-400">5 位在线开发成员</div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-semibold">Live Socket</span>
+                </div>
+
+                <!-- Chat history snippet -->
+                <div class="space-y-3 py-2 text-xs">
+                  <div class="flex items-start gap-2.5">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" class="w-7 h-7 rounded-full object-cover">
+                    <div>
+                      <div class="text-[10px] text-zinc-400 font-medium">Alex Morgan <span class="ml-1 text-[9px]">15:20</span></div>
+                      <div class="bg-zinc-100 dark:bg-zinc-800 p-2.5 rounded-2xl rounded-tl-xs text-xs mt-0.5 max-w-sm">
+                        大家看一下 Figma 上刚同步的 <code>pro-components</code> Token，颜色规范已经完整合并到主分支了。
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start justify-end gap-2.5">
+                    <div>
+                      <div class="text-[10px] text-zinc-400 font-medium text-right">我 <span class="ml-1 text-[9px]">15:21</span></div>
+                      <div class="bg-primary text-white p-2.5 rounded-2xl rounded-tr-xs text-xs mt-0.5 max-w-sm shadow-xs">
+                        收到，前端表格的批量多选工具条和暗黑模式已经测试通过，效果非常漂亮！🚀
+                      </div>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" class="w-7 h-7 rounded-full object-cover">
+                  </div>
+                </div>
+
+                <!-- Input area -->
+                <div class="flex items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                  <button class="p-2 rounded-xl text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                    <i data-lucide="paperclip" class="w-4 h-4"></i>
+                  </button>
+                  <input type="text" placeholder="在 #design-system-team 中发送消息..." class="flex-1 px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80 outline-none focus:ring-2 focus:ring-primary">
+                  <button onclick="showToast('团队消息已发送！', 'success')" class="px-3.5 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-600 transition-colors">
+                    发送
+                  </button>
+                </div>
+
+              </div>
+
+              <!-- Authentication & Security (Col-5) -->
+              <div class="lg:col-span-5 bg-white dark:bg-[#151619] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                  <span class="text-xs font-bold text-zinc-400 uppercase tracking-widest">Authentication (Node 92:10559)</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">SSO Ready</span>
+                </div>
+                
+                <div>
+                  <h4 class="text-base font-bold text-zinc-900 dark:text-zinc-100">企业级安全单点登录</h4>
+                  <p class="text-xs text-zinc-500 mt-0.5">支持 SAML 2.0、OAuth 2.0 及 OAuth 令牌自动续期</p>
+                </div>
+
+                <div class="space-y-2">
+                  <button onclick="showToast('正在调起 Google Workspace 统一登录...')" class="w-full py-2.5 px-4 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center justify-center gap-2.5 transition-all shadow-xs">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                    Google Workspace SSO 登录
+                  </button>
+                  <button onclick="showToast('正在调起 GitHub Enterprise 授权...')" class="w-full py-2.5 px-4 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center justify-center gap-2.5 transition-all shadow-xs">
+                    <i data-lucide="github" class="w-4 h-4"></i> GitHub Enterprise 单点登录
+                  </button>
+                </div>
+
+                <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/80 flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+                    <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-500"></i>
+                    <span>已启用端到端加密连接</span>
+                  </div>
+                  <span class="text-[10px] text-zinc-400 font-mono">TLS 1.3</span>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= 2. AI STUDIO MODULE ================= -->
+    <section id="section-ai" class="tab-section hidden space-y-8">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-zinc-200 dark:border-zinc-800 gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="p-1.5 rounded-lg bg-purple-500/10 text-purple-500"><i data-lucide="sparkles" class="w-5 h-5"></i></span>
+            <span class="text-xs font-bold text-purple-500 tracking-wider uppercase">Next-Gen AI Copilot Studio</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-semibold border border-emerald-500/20">Figma MCP Linked</span>
+          </div>
+          <h2 class="text-2xl font-black tracking-tight">AI 智能对话与 Studio 工作台</h2>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+            基于 Figma Page 4 (AI) 深度还原。提供如同 Cursor / Claude Artifacts 般的全屏 Studio 交互体验：多会话历史归档、深度思维链推理展示、实时代码窗一键复制、浮动输入胶囊与实时调参面板。
+          </p>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button onclick="createNewChat()" class="px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-purple-600 to-primary hover:from-purple-500 hover:to-primary text-white shadow-md shadow-primary/20 transition-all flex items-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i> 新建会话 (⌘N)
+          </button>
+        </div>
+      </div>
+
+      <!-- 3-Column Immersive AI Studio Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 h-[760px] bg-white dark:bg-[#141518] rounded-3xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-sm overflow-hidden">
+        
+        <!-- Left Column: Sessions & History (2.5 Cols) -->
+        <div class="lg:col-span-3 border-r border-zinc-200 dark:border-zinc-800/90 p-4 flex flex-col justify-between bg-zinc-50/60 dark:bg-[#101113] overflow-y-auto custom-scrollbar">
+          
+          <div class="space-y-5">
+            <!-- New Chat Primary Button -->
+            <button onclick="createNewChat()" class="w-full py-2.5 px-3.5 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-primary dark:hover:border-primary text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:text-primary transition-all flex items-center justify-between group">
+              <span class="flex items-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4 text-primary group-hover:scale-110 transition-transform"></i> 开始新对话
+              </span>
+              <kbd class="px-1.5 py-0.5 text-[10px] bg-white dark:bg-zinc-800 rounded border border-zinc-200 dark:border-zinc-700 text-zinc-400 font-mono">⌘N</kbd>
+            </button>
+
+            <!-- Search Sessions -->
+            <div class="relative">
+              <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-2.5 text-zinc-400"></i>
+              <input type="text" placeholder="搜索历史对话..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/80 outline-none focus:ring-2 focus:ring-primary">
+            </div>
+
+            <!-- Group: Pinned Prompts -->
+            <div class="space-y-1">
+              <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 mb-1">置顶预设 (Pinned)</div>
+              <button onclick="selectChatSession('Figma 设计系统 Token 解析')" class="w-full p-2.5 rounded-xl text-left hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2.5 text-xs text-zinc-700 dark:text-zinc-300">
+                <i data-lucide="palette" class="w-4 h-4 text-primary shrink-0"></i>
+                <span class="truncate">Figma 设计系统 Token 解析</span>
+              </button>
+              <button onclick="selectChatSession('React 19 Server Actions 重构')" class="w-full p-2.5 rounded-xl text-left hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-2.5 text-xs text-zinc-700 dark:text-zinc-300">
+                <i data-lucide="code" class="w-4 h-4 text-purple-500 shrink-0"></i>
+                <span class="truncate">React 19 组件架构审查</span>
+              </button>
+            </div>
+
+            <!-- Group: Today Sessions -->
+            <div class="space-y-1">
+              <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 mb-1">今天 (Today)</div>
+              <div class="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-xs font-semibold text-primary flex items-center justify-between cursor-pointer">
+                <span class="truncate">NextUI 表格组件实现</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              </div>
+              <button onclick="selectChatSession('电商购物车数量控制器')" class="w-full p-2.5 rounded-xl text-left hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors text-xs text-zinc-600 dark:text-zinc-400 truncate">
+                电商购物车数量控制器
+              </button>
+              <button onclick="selectChatSession('Chart.js 双轴平滑折线图')" class="w-full p-2.5 rounded-xl text-left hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors text-xs text-zinc-600 dark:text-zinc-400 truncate">
+                Chart.js 双轴平滑折线图
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Quota Indicator at bottom -->
+          <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800/80 space-y-2">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-zinc-500">本月 Token 算力</span>
+              <span class="font-bold text-primary">24.8k / 100k</span>
+            </div>
+            <div class="w-full bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-gradient-to-r from-primary to-purple-500 h-full rounded-full" style="width: 25%"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Center Column: Core Chat Canvas (6.5 Cols) -->
+        <div class="lg:col-span-6 flex flex-col justify-between h-full bg-white dark:bg-[#141518] relative">
+          
+          <!-- Top Chat Toolbar -->
+          <div class="p-4 border-b border-zinc-200 dark:border-zinc-800/90 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/30 backdrop-blur-md">
+            
+            <div class="flex items-center gap-3">
+              <!-- Model Selector Dropdown -->
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs font-bold text-zinc-900 dark:text-zinc-100">Gemini 3.8 Flash</span>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-zinc-400"></i>
+              </div>
+
+              <!-- Reasoning Effort Pill -->
+              <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[10px] font-bold border border-purple-500/20">
+                <i data-lucide="brain" class="w-3 h-3"></i> Max Effort
+              </div>
+            </div>
+
+            <!-- Action Cluster -->
+            <div class="flex items-center gap-1.5">
+              <button onclick="createNewChat()" title="清空对话" class="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+              <button onclick="showToast('会话链接已生成，已复制到剪贴板！', 'success')" title="分享此会话" class="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors">
+                <i data-lucide="share-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Chat Messages Container -->
+          <div id="chatMessagesContainer" class="flex-1 p-5 overflow-y-auto space-y-6 custom-scrollbar">
+            
+            <!-- Welcome Empty Card (Initial State) -->
+            <div id="aiWelcomeCard" class="py-8 px-2 text-center max-w-lg mx-auto space-y-5">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-primary text-white flex items-center justify-center mx-auto shadow-xl shadow-primary/20 ring-4 ring-primary/10">
+                <i data-lucide="sparkles" class="w-7 h-7"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Acme AI Studio</h3>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto leading-relaxed">
+                  专为前端开发与设计系统打造的下一代 AI 编程助理，已完整挂载 Figma pro-components 核心规范。
+                </p>
+              </div>
+
+              <!-- 4 Quick Prompt Cards (2x2) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left pt-2">
+                <button onclick="sendQuickPrompt('生成一个带搜索与分页的 NextUI 风格表格组件')" class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-750 hover:border-primary dark:hover:border-primary hover:shadow-md transition-all space-y-1 group">
+                  <div class="flex items-center gap-2 font-semibold text-xs text-zinc-800 dark:text-zinc-200 group-hover:text-primary">
+                    <i data-lucide="table" class="w-4 h-4 text-primary"></i> 生成 React 表格组件
+                  </div>
+                  <p class="text-[10px] text-zinc-400">多选、状态标签与操作工具条</p>
+                </button>
+
+                <button onclick="sendQuickPrompt('解析 Figma pro-components 设计系统中的颜色令牌规范')" class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-750 hover:border-primary dark:hover:border-primary hover:shadow-md transition-all space-y-1 group">
+                  <div class="flex items-center gap-2 font-semibold text-xs text-zinc-800 dark:text-zinc-200 group-hover:text-primary">
+                    <i data-lucide="palette" class="w-4 h-4 text-purple-500"></i> 解析 Figma 颜色令牌
+                  </div>
+                  <p class="text-[10px] text-zinc-400">提取 Primary、Success 与 Neutrals</p>
+                </button>
+
+                <button onclick="sendQuickPrompt('为登录与注册认证模块编写具有安全校验的 Form 组件')" class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-750 hover:border-primary dark:hover:border-primary hover:shadow-md transition-all space-y-1 group">
+                  <div class="flex items-center gap-2 font-semibold text-xs text-zinc-800 dark:text-zinc-200 group-hover:text-primary">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> 安全认证 Form 组件
+                  </div>
+                  <p class="text-[10px] text-zinc-400">Google/GitHub 快速登录集成</p>
+                </button>
+
+                <button onclick="sendQuickPrompt('生成一个带暗黑模式平滑渐变的 Chart.js 面积趋势图')" class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-850 border border-zinc-200/80 dark:border-zinc-750 hover:border-primary dark:hover:border-primary hover:shadow-md transition-all space-y-1 group">
+                  <div class="flex items-center gap-2 font-semibold text-xs text-zinc-800 dark:text-zinc-200 group-hover:text-primary">
+                    <i data-lucide="line-chart" class="w-4 h-4 text-amber-500"></i> 编写可视化趋势图
+                  </div>
+                  <p class="text-[10px] text-zinc-400">平滑贝塞尔曲线与自适应暗色</p>
+                </button>
+              </div>
+            </div>
+
+            <!-- Existing Message Thread -->
+            <!-- User Bubble -->
+            <div class="flex items-start justify-end gap-3">
+              <div class="max-w-[80%] bg-zinc-900 text-white dark:bg-primary dark:text-white p-4 rounded-2xl rounded-tr-xs text-xs shadow-md leading-relaxed border border-zinc-800 dark:border-primary/50">
+                请为我编写一个符合 NextUI / Figma 规范的登录卡片组件，支持 Google 和 GitHub 快速登录。
+              </div>
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-zinc-700 to-zinc-900 border border-zinc-700 flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-xs">
+                U
+              </div>
+            </div>
+
+            <!-- AI Response -->
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-primary flex items-center justify-center text-white shrink-0 shadow-md shadow-primary/20">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+              </div>
+              <div class="flex-1 max-w-[88%] bg-white dark:bg-[#16171a] p-5 rounded-2xl rounded-tl-xs text-xs space-y-4 border border-zinc-200/90 dark:border-zinc-800/90 shadow-sm">
+                
+                <!-- Thinking Process Collapsible -->
+                <div class="rounded-xl bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-3 space-y-2">
+                  <button onclick="toggleThinkingProcess(this)" class="w-full flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-semibold font-mono text-[11px] hover:underline">
+                    <span class="flex items-center gap-2">
+                      <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                      <span>Thought Process (已思考 3.2 秒 · 深度推理完成)</span>
+                    </span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform"></i>
+                  </button>
+                  <div class="thinking-content text-[11px] text-zinc-400 font-mono leading-relaxed pl-4 border-l-2 border-emerald-500/40 space-y-1">
+                    <p>1. 检索 Figma File `UGv1yrGRKKFxjXMBk4tnt3` 中 Node `92:10559` 规格参数...</p>
+                    <p>2. 应用圆角规范 `var(--radius-lg)` (16px) 与主色 `#006fee`...</p>
+                    <p>3. 封装第三方 OAuth 2.0 按钮与表单校验逻辑...</p>
+                  </div>
+                </div>
+
+                <div class="space-y-3 leading-relaxed text-zinc-800 dark:text-zinc-200">
+                  <p>已为你生成符合 <strong>pro-components</strong> 设计规范的认证卡片核心代码：</p>
+                  
+                  <!-- Code Window with Mac buttons -->
+                  <div class="rounded-xl overflow-hidden bg-zinc-950 text-zinc-100 text-[11px] font-mono border border-zinc-800 shadow-xl">
+                    <div class="px-4 py-2 bg-zinc-900/90 border-b border-zinc-800/80 flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+                        <span class="text-zinc-400 text-[11px] ml-2 font-sans font-medium">LoginCard.tsx</span>
+                      </div>
+                      <button onclick="copySnippetDirect(this)" class="text-zinc-400 hover:text-white flex items-center gap-1.5 text-[11px] transition-colors">
+                        <i data-lucide="copy" class="w-3 h-3"></i> 复制代码
+                      </button>
+                    </div>
+                    <pre class="p-4 overflow-x-auto text-emerald-400 leading-relaxed"><code>export function LoginCard() {
+  return (
+    &lt;div className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm"&gt;
+      &lt;h3 className="text-lg font-bold"&gt;Welcome Back&lt;/h3&gt;
+      &lt;p className="text-xs text-zinc-500 mt-1"&gt;Log in to your account to continue&lt;/p&gt;
+      &lt;div className="mt-4 space-y-2"&gt;
+        &lt;button className="w-full py-2.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-medium"&gt;
+          Continue with Google
+        &lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+                  </div>
+
+                  <!-- Feedback Bar -->
+                  <div class="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-zinc-400">
+                    <div class="flex items-center gap-4 text-[11px]">
+                      <button onclick="showToast('已记录优质响应！', 'success')" class="hover:text-zinc-200 flex items-center gap-1.5 transition-colors">
+                        <i data-lucide="thumbs-up" class="w-3.5 h-3.5"></i> 赞
+                      </button>
+                      <button onclick="showToast('已记录优化反馈！')" class="hover:text-zinc-200 flex items-center gap-1.5 transition-colors">
+                        <i data-lucide="thumbs-down" class="w-3.5 h-3.5"></i> 踩
+                      </button>
+                      <button onclick="showToast('重新生成中...')" class="hover:text-zinc-200 flex items-center gap-1.5 transition-colors">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> 重新生成
+                      </button>
+                    </div>
+                    <span class="text-[10px] text-zinc-400 font-mono">Tokens: 284 · 24ms</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Floating Input Capsule -->
+          <div class="p-4 border-t border-zinc-200 dark:border-zinc-800/90 bg-white/95 dark:bg-[#141518]/95 backdrop-blur-md space-y-2.5">
+            
+            <form onsubmit="handleSendAiMessage(event)" class="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
+              
+              <textarea id="aiUserInput" rows="2" placeholder="向 Acme AI 发送提示词、编写代码或分析 Figma 设计..." class="w-full bg-transparent text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none resize-none px-2 py-1 leading-relaxed custom-scrollbar"></textarea>
+              
+              <div class="flex items-center justify-between pt-2 border-t border-zinc-200/60 dark:border-zinc-800/80">
+                
+                <!-- Left Action Icons -->
+                <div class="flex items-center gap-1">
+                  <button type="button" title="上传附件/截图" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+                    <i data-lucide="paperclip" class="w-4 h-4"></i>
+                  </button>
+                  <button type="button" onclick="toggleWebSearch(this)" title="联网搜索增强" class="p-1.5 rounded-lg text-zinc-400 hover:text-primary hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+                    <i data-lucide="globe" class="w-4 h-4"></i>
+                  </button>
+                  <button type="button" onclick="toggleDeepReasoning(this)" title="深度推理模式" class="p-1.5 rounded-lg text-zinc-400 hover:text-purple-500 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+                    <i data-lucide="brain" class="w-4 h-4"></i>
+                  </button>
+                  <button type="button" title="语音输入" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+                    <i data-lucide="mic" class="w-4 h-4"></i>
+                  </button>
+                </div>
+
+                <!-- Right Action Cluster -->
+                <div class="flex items-center gap-3">
+                  <span class="text-[10px] text-zinc-400 font-mono hidden sm:inline">Shift+Enter 换行</span>
+                  <button type="submit" class="w-8 h-8 rounded-xl bg-primary hover:bg-primary-600 text-white flex items-center justify-center shadow-md shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+                    <i data-lucide="arrow-up" class="w-4 h-4"></i>
+                  </button>
+                </div>
+
+              </div>
+
+            </form>
+
+            <p class="text-center text-[10px] text-zinc-400">
+              Acme AI 可以生成代码与分析设计。关键生产环境变更请进行单元测试验证。
+            </p>
+
+          </div>
+
+        </div>
+
+        <!-- Right Column: Playground Parameters Drawer (3 Cols) -->
+        <div class="lg:col-span-3 border-l border-zinc-200 dark:border-zinc-800/90 p-5 flex flex-col justify-between bg-zinc-50/60 dark:bg-[#101113] overflow-y-auto custom-scrollbar">
+          
+          <div class="space-y-6">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+              <h3 class="font-bold text-xs flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+                <i data-lucide="sliders" class="w-4 h-4 text-primary"></i> 调参引擎 (Engine Settings)
+              </h3>
+              <span class="text-[10px] text-zinc-400 font-mono">v3.8</span>
+            </div>
+
+            <!-- Foundation Model -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Foundation Model</label>
+              <select class="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary font-medium">
+                <option selected>Gemini 3.8 Flash (High)</option>
+                <option>Gemini 3.7 Pro (Max)</option>
+                <option>Claude 3.5 Sonnet</option>
+                <option>GPT-4o</option>
+              </select>
+            </div>
+
+            <!-- Temperature Slider -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <label class="font-semibold text-zinc-700 dark:text-zinc-300">Temperature (随机性)</label>
+                <span id="tempValue" class="font-mono text-primary font-bold">0.7</span>
+              </div>
+              <input type="range" min="0" max="1" step="0.05" value="0.7" oninput="document.getElementById('tempValue').innerText = this.value" class="w-full accent-primary">
+              <div class="flex justify-between text-[10px] text-zinc-400 font-mono">
+                <span>严谨 (0.0)</span>
+                <span>创意 (1.0)</span>
+              </div>
+            </div>
+
+            <!-- Max Tokens Slider -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <label class="font-semibold text-zinc-700 dark:text-zinc-300">Max Tokens</label>
+                <span id="tokensValue" class="font-mono text-primary font-bold">4096</span>
+              </div>
+              <input type="range" min="512" max="8192" step="512" value="4096" oninput="document.getElementById('tokensValue').innerText = this.value" class="w-full accent-primary">
+            </div>
+
+            <!-- System Prompt -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">System Instructions</label>
+              <textarea rows="5" class="w-full p-2.5 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary leading-relaxed font-mono custom-scrollbar">You are Acme AI Copilot. Adhere strictly to the NextUI / HeroUI Figma tokens, Auto Layout, and accessibility guidelines.</textarea>
+            </div>
+
+          </div>
+
+          <button onclick="showToast('调参策略已实时应用到 AI 对话流！', 'success')" class="w-full py-2.5 rounded-xl bg-zinc-900 text-white dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-semibold transition-all shadow-xs">
+            应用当前参数配置
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= 3. MARKETING MODULE ================= -->
+    <section id="section-marketing" class="tab-section hidden space-y-10">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-zinc-200 dark:border-zinc-800 gap-4">
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight flex items-center gap-3">
+            <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500"><i data-lucide="megaphone" class="w-6 h-6"></i></span>
+            Marketing 营销与落地页组件
+          </h2>
+          <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            复刻 Figma Page 5 (Marketing) 中的 Hero Section、FAQ Accordion、Footer、Cookie Consent 及 Banner。
+          </p>
+        </div>
+        <button onclick="copySnippet('snippet-marketing-full')" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors flex items-center gap-1.5 self-start">
+          <i data-lucide="copy" class="w-4 h-4"></i> 复制营销模块代码
+        </button>
+      </div>
+
+      <!-- Banner Component (Node 97:16642) -->
+      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 border border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded-md bg-primary text-white font-bold text-[10px]">NEW</span>
+          <span class="font-medium text-zinc-800 dark:text-zinc-200">🎉 Acme Pro Components 2.0 发布：完整支持 Figma MCP 深度集成</span>
+        </div>
+        <a href="#" class="font-semibold text-primary hover:underline flex items-center gap-1 shrink-0">
+          了解更新日志 <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </a>
+      </div>
+
+      <!-- Hero Section (Node 77:6244) -->
+      <div class="bg-white dark:bg-[#16171a] p-8 md:p-14 rounded-3xl border border-zinc-200 dark:border-zinc-800 text-center space-y-6 shadow-sm relative overflow-hidden">
+        <div class="absolute -top-24 -left-24 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -right-24 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+          <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          基于 Figma pro-components 规范构建
+        </div>
+
+        <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight max-w-3xl mx-auto leading-tight">
+          打造现代化、一致性极佳的 <span class="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">企业级应用界面</span>
+        </h1>
+
+        <p class="text-sm md:text-base text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto">
+          为前端开发者与设计师打造的高品质组件集，支持一键切换主题、全键盘无障碍访问，并无缝适配各类业务场景。
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <button onclick="showToast('正在初始化 Demo 项目...')" class="px-6 py-3 rounded-xl bg-primary hover:bg-primary-600 text-white font-semibold text-xs shadow-lg shadow-primary/25 transition-all flex items-center gap-2">
+            免费开始使用 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+          <button onclick="openGlobalCodeModal()" class="px-6 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-xs font-semibold transition-all">
+            查看设计文件
+          </button>
+        </div>
+
+        <!-- Social Proof Numbers -->
+        <div class="pt-8 border-t border-zinc-100 dark:border-zinc-800/80 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto text-center">
+          <div>
+            <div class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">56+</div>
+            <div class="text-xs text-zinc-400 mt-0.5">Component Sets</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">389+</div>
+            <div class="text-xs text-zinc-400 mt-0.5">Figma Components</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">99.9%</div>
+            <div class="text-xs text-zinc-400 mt-0.5">Uptime SLA</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">10k+</div>
+            <div class="text-xs text-zinc-400 mt-0.5">Global Teams</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ Section (Node 97:15779) -->
+      <div class="bg-white dark:bg-[#16171a] p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-6">
+        <div class="text-center max-w-xl mx-auto">
+          <span class="text-xs font-semibold text-primary uppercase tracking-wider">FAQ</span>
+          <h3 class="text-xl font-bold mt-1">常见问题答疑 (Frequently Asked Questions)</h3>
+          <p class="text-xs text-zinc-500 mt-1">解答关于组件库授权、技术支持与集成方式的疑问</p>
+        </div>
+
+        <div class="max-w-2xl mx-auto divide-y divide-zinc-200 dark:divide-zinc-800">
+          
+          <div class="py-4">
+            <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left font-semibold text-sm hover:text-primary transition-colors">
+              <span>如何将 Figma MCP 直接绑定到当前工程中？</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-zinc-400 transition-transform"></i>
+            </button>
+            <div class="faq-answer hidden text-xs text-zinc-500 dark:text-zinc-400 pt-2 leading-relaxed">
+              可以在 CLI 中通过 <code>agy mcp add Figma &lt;url&gt;</code> 配置全局服务，或直接使用已生成的 <code>/data/acme-pro-components/figma_reader.py</code> 工具拉取设计令牌。
+            </div>
+          </div>
+
+          <div class="py-4">
+            <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left font-semibold text-sm hover:text-primary transition-colors">
+              <span>组件是否支持纯 HTML/Tailwind CSS 和 React？</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-zinc-400 transition-transform"></i>
+            </button>
+            <div class="faq-answer hidden text-xs text-zinc-500 dark:text-zinc-400 pt-2 leading-relaxed">
+              是的，本系统提供纯原生 Tailwind CSS 类名与现代 HTML5 语义化标签，完全无缝兼容 React、Next.js、Vue 3 及原生网页。
+            </div>
+          </div>
+
+          <div class="py-4">
+            <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left font-semibold text-sm hover:text-primary transition-colors">
+              <span>暗黑模式是如何实现的？</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-zinc-400 transition-transform"></i>
+            </button>
+            <div class="faq-answer hidden text-xs text-zinc-500 dark:text-zinc-400 pt-2 leading-relaxed">
+              通过在根标签注入 <code>.dark</code> 类，搭配 <code>tokens.css</code> 中的 CSS 自定义变量，实现毫秒级无闪烁暗黑模式切换。
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Cookie Consent Banner (Node 97:16539) -->
+      <div id="cookieBanner" class="p-4 rounded-2xl bg-zinc-900 text-white flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+        <div class="flex items-center gap-3">
+          <i data-lucide="cookie" class="w-6 h-6 text-amber-400 shrink-0"></i>
+          <p class="text-xs text-zinc-300">
+            我们使用必要的 Cookies 来改善你的浏览体验和分析网站流量。点击“同意全部”即表示接受相关隐私协议。
+          </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="dismissCookieBanner()" class="px-3 py-1.5 text-xs font-medium rounded-xl border border-zinc-700 hover:bg-zinc-800 transition-colors">
+            仅必要 Cookies
+          </button>
+          <button onclick="dismissCookieBanner()" class="px-4 py-1.5 text-xs font-semibold rounded-xl bg-primary hover:bg-primary-600 text-white transition-colors">
+            同意全部
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= 4. E-COMMERCE MODULE ================= -->
+    <section id="section-ecommerce" class="tab-section hidden space-y-10">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-zinc-200 dark:border-zinc-800 gap-4">
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight flex items-center gap-3">
+            <span class="p-2 rounded-lg bg-amber-500/10 text-amber-500"><i data-lucide="shopping-bag" class="w-6 h-6"></i></span>
+            E-commerce 电商体系组件
+          </h2>
+          <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            复刻 Figma Page 6 (E-commerce) 中的 Product Cards、Product View Info、Filter Sidebar 及 Customer Reviews。
+          </p>
+        </div>
+        <button onclick="copySnippet('snippet-ecom-full')" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors flex items-center gap-1.5 self-start">
+          <i data-lucide="copy" class="w-4 h-4"></i> 复制电商模块代码
+        </button>
+      </div>
+
+      <!-- Product Detail View (Node 98:20127) -->
+      <div class="bg-white dark:bg-[#16171a] p-6 md:p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+        <!-- Gallery Preview -->
+        <div class="md:col-span-5 space-y-3">
+          <div class="aspect-square rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 overflow-hidden relative group">
+            <img id="mainProductImg" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+            <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-danger text-white text-[10px] font-bold uppercase tracking-wider">
+              25% OFF
+            </span>
+          </div>
+          <!-- Thumbnails -->
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="changeProductImg('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80')" class="aspect-square rounded-xl border-2 border-primary overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&q=80" class="w-full h-full object-cover">
+            </button>
+            <button onclick="changeProductImg('https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&q=80')" class="aspect-square rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1484704849700-f032a568e944?w=200&q=80" class="w-full h-full object-cover">
+            </button>
+            <button onclick="changeProductImg('https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80')" class="aspect-square rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=200&q=80" class="w-full h-full object-cover">
+            </button>
+            <button onclick="changeProductImg('https://images.unsplash.com/photo-1524678606370-a47ad25cb82a?w=800&q=80')" class="aspect-square rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1524678606370-a47ad25cb82a?w=200&q=80" class="w-full h-full object-cover">
+            </button>
+          </div>
+        </div>
+
+        <!-- Product Specs & Actions (Node 98:20127) -->
+        <div class="md:col-span-7 space-y-5">
+          <div class="space-y-1">
+            <span class="text-xs text-primary font-semibold uppercase tracking-wider">Audio & Electronics</span>
+            <h2 class="text-2xl font-bold tracking-tight">Acme Studio Wireless ANC 耳机</h2>
+            <div class="flex items-center gap-3 pt-1">
+              <div class="flex items-center text-amber-400">
+                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                <i data-lucide="star-half" class="w-4 h-4 fill-current"></i>
+              </div>
+              <span class="text-xs font-semibold">4.8</span>
+              <span class="text-xs text-zinc-400">(248 条真实评价)</span>
+            </div>
+          </div>
+
+          <div class="flex items-baseline gap-3">
+            <span class="text-3xl font-extrabold text-primary">¥1,299.00</span>
+            <span class="text-base text-zinc-400 line-through">¥1,699.00</span>
+            <span class="text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 font-semibold">现货库存充足</span>
+          </div>
+
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            配备主动降噪 ANC 芯片，高达 40 小时超长续航，支持双设备无缝连接与空间音频调优。人体工学记忆海绵耳罩，带来无压迫佩戴体验。
+          </p>
+
+          <!-- Color Variant Selector -->
+          <div class="space-y-2">
+            <label class="text-xs font-semibold">颜色选择: <span id="selectedColorName" class="text-zinc-400 font-normal">太空黑</span></label>
+            <div class="flex items-center gap-3">
+              <button onclick="selectColor('太空黑', this)" class="w-7 h-7 rounded-full bg-zinc-900 ring-2 ring-primary ring-offset-2 dark:ring-offset-zinc-900"></button>
+              <button onclick="selectColor('皓月白', this)" class="w-7 h-7 rounded-full bg-zinc-100 border border-zinc-300"></button>
+              <button onclick="selectColor('深海蓝', this)" class="w-7 h-7 rounded-full bg-blue-600"></button>
+            </div>
+          </div>
+
+          <!-- Quantity & CTA Buttons -->
+          <div class="flex items-center gap-4 pt-2">
+            <div class="flex items-center border border-zinc-200 dark:border-zinc-700 rounded-xl bg-zinc-50 dark:bg-zinc-800">
+              <button onclick="changeQty(-1)" class="px-3 py-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">-</button>
+              <span id="productQty" class="px-3 py-2 text-xs font-semibold">1</span>
+              <button onclick="changeQty(1)" class="px-3 py-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">+</button>
+            </div>
+            <button onclick="showToast('已加入购物车！')" class="flex-1 py-3 px-5 rounded-xl bg-primary hover:bg-primary-600 text-white font-semibold text-xs shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2">
+              <i data-lucide="shopping-cart" class="w-4 h-4"></i> 加入购物车
+            </button>
+            <button onclick="showToast('已收藏到心愿单！')" class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+              <i data-lucide="heart" class="w-4 h-4 text-zinc-400 hover:text-danger"></i>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Customer Reviews Breakdown (Node 98:18030) -->
+      <div class="bg-white dark:bg-[#16171a] p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-6">
+        <h3 class="font-bold text-base flex items-center justify-between">
+          <span>用户评价与口碑分布 (Customer Reviews)</span>
+          <span class="text-xs text-primary font-normal hover:underline cursor-pointer">写评价</span>
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          <div class="md:col-span-4 text-center md:border-r border-zinc-200 dark:border-zinc-800 md:pr-6">
+            <div class="text-5xl font-black text-primary">4.8</div>
+            <div class="flex items-center justify-center text-amber-400 my-2">
+              <i data-lucide="star" class="w-5 h-5 fill-current"></i>
+              <i data-lucide="star" class="w-5 h-5 fill-current"></i>
+              <i data-lucide="star" class="w-5 h-5 fill-current"></i>
+              <i data-lucide="star" class="w-5 h-5 fill-current"></i>
+              <i data-lucide="star-half" class="w-5 h-5 fill-current"></i>
+            </div>
+            <p class="text-xs text-zinc-400">基于 248 条全球买家评分</p>
+          </div>
+
+          <!-- Progress Bars -->
+          <div class="md:col-span-8 space-y-2 text-xs">
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-zinc-400">5 星</span>
+              <div class="flex-1 bg-zinc-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-400 h-full rounded-full" style="width: 85%"></div>
+              </div>
+              <span class="w-10 text-right text-zinc-400">85%</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-zinc-400">4 星</span>
+              <div class="flex-1 bg-zinc-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-400 h-full rounded-full" style="width: 10%"></div>
+              </div>
+              <span class="w-10 text-right text-zinc-400">10%</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-zinc-400">3 星</span>
+              <div class="flex-1 bg-zinc-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-400 h-full rounded-full" style="width: 3%"></div>
+              </div>
+              <span class="w-10 text-right text-zinc-400">3%</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-zinc-400">2 星</span>
+              <div class="flex-1 bg-zinc-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-400 h-full rounded-full" style="width: 1%"></div>
+              </div>
+              <span class="w-10 text-right text-zinc-400">1%</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-zinc-400">1 星</span>
+              <div class="flex-1 bg-zinc-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-400 h-full rounded-full" style="width: 1%"></div>
+              </div>
+              <span class="w-10 text-right text-zinc-400">1%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= 5. CHARTS MODULE ================= -->
+    <section id="section-charts" class="tab-section hidden space-y-10">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-zinc-200 dark:border-zinc-800 gap-4">
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight flex items-center gap-3">
+            <span class="p-2 rounded-lg bg-blue-500/10 text-primary"><i data-lucide="line-chart" class="w-6 h-6"></i></span>
+            Charts & Analytics 数据可视化组件
+          </h2>
+          <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            复刻 Figma Page 7 (Charts) 中的 Linear Graph、TrendGraph、Bars、Pie、Gauge 及数据指标卡片。
+          </p>
+        </div>
+        <button onclick="copySnippet('snippet-charts-full')" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors flex items-center gap-1.5 self-start">
+          <i data-lucide="copy" class="w-4 h-4"></i> 复制图表模块代码
+        </button>
+      </div>
+
+      <!-- Stats Cards Top Row (Node 126:23459) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        
+        <!-- Stat 1 -->
+        <div class="bg-white dark:bg-[#16171a] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-2">
+          <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+            <span>总营收 (Total Revenue)</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-500">+14.2%</span>
+          </div>
+          <div class="text-2xl font-bold">¥284,930.00</div>
+          <p class="text-[11px] text-zinc-400">较上月同比增加 ¥34,200</p>
+        </div>
+
+        <!-- Stat 2 -->
+        <div class="bg-white dark:bg-[#16171a] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-2">
+          <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+            <span>活跃用户 (Active Users)</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-500">+8.7%</span>
+          </div>
+          <div class="text-2xl font-bold">48,219</div>
+          <p class="text-[11px] text-zinc-400">实时在线 1,420 人</p>
+        </div>
+
+        <!-- Stat 3 -->
+        <div class="bg-white dark:bg-[#16171a] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-2">
+          <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+            <span>转化率 (Conversion Rate)</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-danger/10 text-danger">-0.8%</span>
+          </div>
+          <div class="text-2xl font-bold">3.48%</div>
+          <p class="text-[11px] text-zinc-400">平均访问时长 4m 12s</p>
+        </div>
+
+        <!-- Stat 4 -->
+        <div class="bg-white dark:bg-[#16171a] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-2">
+          <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+            <span>平均客单价 (AOV)</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-500">+5.3%</span>
+          </div>
+          <div class="text-2xl font-bold">¥128.50</div>
+          <p class="text-[11px] text-zinc-400">订单总数 2,217 单</p>
+        </div>
+
+      </div>
+
+      <!-- Charts Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Main Line & Trend Chart (Node 121:7801 & 155:26115) -->
+        <div class="lg:col-span-8 bg-white dark:bg-[#16171a] p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-sm">营收趋势分析 (Linear Graph & Trends)</h3>
+              <p class="text-xs text-zinc-400">近 6 个月实际收益 vs 目标基线</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 text-xs text-zinc-500">
+                <span class="w-2.5 h-2.5 rounded-full bg-primary"></span> 2026 实际
+              </span>
+              <span class="inline-flex items-center gap-1.5 text-xs text-zinc-500 ml-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-zinc-300 dark:bg-zinc-600"></span> 目标基准
+              </span>
+            </div>
+          </div>
+          <div class="h-72 w-full">
+            <canvas id="revenueTrendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Donut / Ring Graph (Node 121:6820 & 154:21888) -->
+        <div class="lg:col-span-4 bg-white dark:bg-[#16171a] p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4 flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-sm">流量获取渠道 (Traffic Ring Chart)</h3>
+            <p class="text-xs text-zinc-400">访客来源分布统计</p>
+          </div>
+          <div class="h-56 relative flex items-center justify-center">
+            <canvas id="trafficDonutChart"></canvas>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-primary"></span>
+              <span class="text-zinc-500">自然搜索 (45%)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+              <span class="text-zinc-500">直接访问 (25%)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span class="text-zinc-500">社交引流 (20%)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span class="text-zinc-500">付费广告 (10%)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= COMMAND PALETTE MODAL (⌘K) ================= -->
+  <div id="commandMenuBackdrop" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-start justify-center pt-20 px-4">
+    <div class="bg-white dark:bg-[#16171a] border border-zinc-200 dark:border-zinc-700/80 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
+        <i data-lucide="search" class="w-5 h-5 text-zinc-400"></i>
+        <input type="text" id="cmdInput" placeholder="键入指令或搜索组件..." class="w-full text-sm bg-transparent focus:outline-none text-zinc-900 dark:text-zinc-100">
+        <kbd class="px-2 py-0.5 text-[10px] bg-zinc-100 dark:bg-zinc-800 rounded text-zinc-500 font-mono">ESC</kbd>
+      </div>
+      <div class="p-2 max-h-72 overflow-y-auto space-y-1 text-xs">
+        <div class="text-[10px] uppercase font-semibold text-zinc-400 px-3 py-1">快速跳转</div>
+        <button onclick="switchTab('application'); toggleCommandMenu(false)" class="w-full flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left">
+          <span class="flex items-center gap-2.5"><i data-lucide="layout-dashboard" class="w-4 h-4 text-primary"></i> Application 后台组件</span>
+          <span class="text-[10px] text-zinc-400 font-mono">Tab 1</span>
+        </button>
+        <button onclick="switchTab('ai'); toggleCommandMenu(false)" class="w-full flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left">
+          <span class="flex items-center gap-2.5"><i data-lucide="bot" class="w-4 h-4 text-purple-500"></i> AI 智能对话组件</span>
+          <span class="text-[10px] text-zinc-400 font-mono">Tab 2</span>
+        </button>
+        <button onclick="switchTab('marketing'); toggleCommandMenu(false)" class="w-full flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left">
+          <span class="flex items-center gap-2.5"><i data-lucide="megaphone" class="w-4 h-4 text-emerald-500"></i> Marketing 落地页组件</span>
+          <span class="text-[10px] text-zinc-400 font-mono">Tab 3</span>
+        </button>
+        <button onclick="switchTab('ecommerce'); toggleCommandMenu(false)" class="w-full flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left">
+          <span class="flex items-center gap-2.5"><i data-lucide="shopping-bag" class="w-4 h-4 text-amber-500"></i> E-commerce 电商组件</span>
+          <span class="text-[10px] text-zinc-400 font-mono">Tab 4</span>
+        </button>
+        <button onclick="switchTab('charts'); toggleCommandMenu(false)" class="w-full flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left">
+          <span class="flex items-center gap-2.5"><i data-lucide="line-chart" class="w-4 h-4 text-blue-500"></i> Charts 数据可视化</span>
+          <span class="text-[10px] text-zinc-400 font-mono">Tab 5</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CODE EXPORT MODAL ================= -->
+  <div id="codeModalBackdrop" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#16171a] border border-zinc-200 dark:border-zinc-700 rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="code-2" class="w-5 h-5 text-primary"></i>
+          <h3 class="font-bold text-sm">组件源码导出 (Tailwind CSS / HTML5)</h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="copyModalCode()" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-600 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i> 一键复制
+          </button>
+          <button onclick="closeCodeModal()" class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+      <div class="p-4 overflow-y-auto flex-1 bg-zinc-950 font-mono text-xs text-zinc-300">
+        <pre><code id="codeModalContent">&lt;!-- 正在准备组件代码... --&gt;</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Application Logic -->
+  <script src="./js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+import Icon from '../../shared/Icon';
+import { useToast } from '../hooks/useToast';
+
+export default function Header({
+  title,
+  notificationsOpen,
+  onToggleNotifications,
+  onNewDeal,
+  onNewLead,
+  onOpenAiCopilot,
+  onLogout,
+}) {
+  const showToast = useToast();
+
+  return (
+    <header className="h-16 flex-none bg-white dark:bg-[#121316] border-b border-zinc-200 dark:border-zinc-800 z-30 px-4 lg:px-6 flex items-center justify-between">
+      {/* Brand & Breadcrumb */}
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <Icon name="compass" className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-base tracking-tight text-zinc-900 dark:text-zinc-100">
+                领航 CRM
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-blue-400 font-semibold border border-brand-500/20">
+                华东战区
+              </span>
+            </div>
+            <span
+              id="current-module-title"
+              className="text-[11px] text-zinc-400 font-medium block -mt-0.5"
+            >
+              {title}
+            </span>
+          </div>
+        </div>
+        {/* Global Search Bar */}
+        <div className="hidden md:flex items-center relative w-80 lg:w-96">
+          <Icon
+            name="search"
+            className="w-4 h-4 text-zinc-400 absolute left-3.5 pointer-events-none"
+          />{' '}
+          <input
+            type="text"
+            id="global-crm-search"
+            onChange={(e) => {
+              if (e.target.value.trim()) showToast(`全局匹配关键字: "${e.target.value}"`);
+            }}
+            placeholder="全局搜索客户、商机、线索或合同编号 (⌘K)..."
+            className="w-full pl-9 pr-14 py-1.5 bg-zinc-100 dark:bg-zinc-800/80 border border-transparent focus:border-brand-500 dark:focus:border-blue-500 focus:bg-white dark:focus:bg-zinc-900 rounded-xl text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 transition-all outline-none"
+          />{' '}
+          <kbd className="absolute right-2.5 px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300 rounded border border-zinc-200 dark:border-zinc-600 shadow-xs pointer-events-none">
+            ⌘K
+          </kbd>
+        </div>
+      </div>
+      {/* Quick Action Buttons & User Menu */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onNewDeal}
+          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-xs font-semibold shadow-sm shadow-brand-500/25 transition-all"
+        >
+          <Icon name="plus" className="w-3.5 h-3.5" /> <span>新建商机</span>
+        </button>
+        <button
+          onClick={onNewLead}
+          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all"
+        >
+          <Icon name="user-plus" className="w-3.5 h-3.5" /> <span>录入线索</span>
+        </button>
+        <div className="h-5 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
+        {/* Notification Bell */}
+        <div className="relative">
+          <button
+            onClick={onToggleNotifications}
+            className="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors relative"
+          >
+            <Icon name="bell" className="w-4 h-4" />{' '}
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-zinc-900" />
+          </button>{' '}
+          <div
+            id="dropdown-notifications"
+            className={`${notificationsOpen ? '' : 'hidden '}absolute right-0 mt-2 w-80 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800 p-3 z-50`}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800 px-1">
+              <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                待办与预警提醒 (3)
+              </span>
+              <button
+                onClick={() => showToast('全部标记为已读')}
+                className="text-[11px] text-brand-600 dark:text-blue-400 hover:underline"
+              >
+                全部已读
+              </button>
+            </div>
+            <div className="mt-2 space-y-2 text-xs">
+              <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
+                <div className="font-semibold text-amber-800 dark:text-amber-300">
+                  大华股份 ¥2,400,000 合同待审批
+                </div>
+                <div className="text-[11px] text-amber-700/80 dark:text-amber-400 mt-0.5">
+                  法务已完成初审，等待销售副总审批签署。
+                </div>
+              </div>
+              <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60">
+                <div className="font-semibold text-blue-800 dark:text-blue-300">
+                  顺丰科技 今日 14:00 方案答辩提醒
+                </div>
+                <div className="text-[11px] text-blue-700/80 dark:text-blue-400 mt-0.5">
+                  请提前 15 分钟准备好系统核心架构演示。
+                </div>
+              </div>
+              <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60">
+                <div className="font-semibold text-rose-800 dark:text-rose-300">
+                  中科曙光 商机超 14 天未跟进
+                </div>
+                <div className="text-[11px] text-rose-700/80 dark:text-rose-400 mt-0.5">
+                  即将触发公海自动回收机制。
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* AI Assistant Trigger */}
+        <button
+          onClick={onOpenAiCopilot}
+          className="p-2 rounded-xl text-brand-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors relative"
+          title="进入 AI 销售智能体"
+        >
+          <Icon name="sparkles" className="w-4 h-4" />
+        </button>
+        {/* User Profile Pill */}
+        <div className="flex items-center gap-2.5 pl-2 border-l border-zinc-200 dark:border-zinc-800">
+          <div className="relative">
+            <img
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80"
+              alt="Avatar"
+              className="w-8 h-8 rounded-full object-cover ring-2 ring-brand-500/20"
+            />{' '}
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
+          </div>
+          <div className="hidden xl:block text-left">
+            <div className="text-xs font-bold leading-none text-zinc-900 dark:text-zinc-100">
+              陈明
+            </div>
+            <div className="text-[10px] text-zinc-400 mt-0.5">华东大区 · 销售总监</div>
+          </div>
+          <button
+            onClick={onLogout}
+            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1"
+            title="退出到登录页"
+          >
+            <Icon name="log-out" className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}

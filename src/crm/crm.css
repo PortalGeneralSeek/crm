@@ -1,0 +1,54 @@
+@import '../shared/tokens.css';
+@config '../../tailwind.crm.config.js';
+
+body {
+  font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.35);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.6);
+}
+
+/* Glow highlights */
+.glow-card {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+.dark .glow-card {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+}
+
+/* Smooth page animations */
+.view-transition {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.view-hidden {
+  display: none !important;
+  opacity: 0;
+  transform: scale(0.985);
+}
+
+/* Module animation */
+.crm-module {
+  animation: fadeInModule 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes fadeInModule {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

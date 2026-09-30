@@ -1,0 +1,53 @@
+<!--
+  Acme Pro Components - Application Module (Enhanced SaaS Console)
+  Figma Page 3 (Application) - Node 92:8127, 92:9730, 92:10559, 92:20380
+-->
+
+<!-- 1. KPI Metric Cards with Inline Sparklines -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="bg-white dark:bg-[#151619] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3">
+    <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+      <span>活跃组织成员</span>
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500">+14.2%</span>
+    </div>
+    <div class="flex items-baseline justify-between">
+      <div class="text-2xl font-black text-zinc-900 dark:text-zinc-100">48,219</div>
+      <svg class="w-20 h-8 stroke-emerald-500 fill-none" viewBox="0 0 100 40">
+        <path d="M0,35 Q20,30 40,15 T80,8 T100,2" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="text-[11px] text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">较上周期增加 4,120 人</div>
+  </div>
+</div>
+
+<!-- 2. Pro Data Table with Batch Selection -->
+<div class="border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs bg-white dark:bg-[#151619]">
+  <table class="w-full text-left text-xs">
+    <thead class="bg-zinc-50 dark:bg-zinc-800/50 uppercase text-[10px] text-zinc-400 font-bold border-b border-zinc-200 dark:border-zinc-800">
+      <tr>
+        <th class="p-4 w-12 text-center"><input type="checkbox" class="rounded text-blue-600"></th>
+        <th class="p-4">姓名 / 企业邮箱</th>
+        <th class="p-4">角色组</th>
+        <th class="p-4">2FA 安全</th>
+        <th class="p-4">账号状态</th>
+        <th class="p-4 text-right">操作</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800/80">
+      <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+        <td class="p-4 text-center"><input type="checkbox" class="rounded text-blue-600"></td>
+        <td class="p-4 flex items-center gap-3">
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" class="w-9 h-9 rounded-xl object-cover">
+          <div>
+            <div class="font-bold text-zinc-900 dark:text-zinc-100">Jane Cooper</div>
+            <div class="text-[11px] text-zinc-400">jane.cooper@acme.com</div>
+          </div>
+        </td>
+        <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600">UI/UX Lead</span></td>
+        <td class="p-4 text-emerald-600 font-medium">已验证</td>
+        <td class="p-4"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600">Active</span></td>
+        <td class="p-4 text-right"><button class="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-400">···</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

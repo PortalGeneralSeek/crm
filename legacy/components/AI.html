@@ -1,0 +1,45 @@
+<!--
+  Acme Pro Components - AI Module (Studio & Copilot)
+  Figma Page 4 (AI) - Node 97:13950, 97:14900, 97:15226
+-->
+
+<div class="max-w-4xl mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141518] shadow-sm overflow-hidden flex flex-col h-[700px]">
+  
+  <!-- Header Bar -->
+  <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/40">
+    <div class="flex items-center gap-2.5">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span class="text-xs font-bold">Gemini 3.8 Flash</span>
+      <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 font-bold border border-purple-500/20">
+        Reasoning Max
+      </span>
+    </div>
+  </div>
+
+  <!-- Messages List -->
+  <div class="flex-1 p-5 overflow-y-auto space-y-4">
+    <!-- Collapsible Thinking Block -->
+    <div class="rounded-xl bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 p-3 text-[11px] font-mono text-emerald-600">
+      ✓ Thought Process (深度推理 3.2s 已完成)
+    </div>
+
+    <!-- AI Response with Code Window -->
+    <div class="bg-zinc-950 text-zinc-100 rounded-xl overflow-hidden text-xs font-mono border border-zinc-800 shadow-xl">
+      <div class="px-4 py-2 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between text-zinc-400">
+        <span>Component.tsx</span>
+        <button class="hover:text-white">复制</button>
+      </div>
+      <pre class="p-4 text-emerald-400"><code>export function ProComponent() {
+  return &lt;div className="p-4 rounded-2xl bg-white shadow"&gt;AI Generated&lt;/div&gt;;
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- Floating Capsule Input -->
+  <div class="p-4 border-t border-zinc-200 dark:border-zinc-800">
+    <div class="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl p-2 flex items-center gap-2">
+      <input type="text" placeholder="向 AI Copilot 提问..." class="flex-1 bg-transparent text-xs outline-none px-2">
+      <button class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">↑</button>
+    </div>
+  </div>
+</div>

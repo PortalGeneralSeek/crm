@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>领航 CRM - 智能销售赋能工作台 & 企业云平台 (Port 3001)</title>
+  
+  <!-- Inter & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Design Tokens -->
+  <link rel="stylesheet" href="./css/tokens.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef6ff',
+              100: '#d9ebff',
+              200: '#bcdeff',
+              300: '#8ec9ff',
+              400: '#58a8ff',
+              500: '#006fee',
+              600: '#005bc4',
+              700: '#00479b',
+              800: '#023c80',
+              900: '#07336b',
+            },
+            accent: {
+              500: '#7828c8',
+              600: '#6020a0',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.35);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.6);
+    }
+
+    /* Glow highlights */
+    .glow-card {
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    }
+    .dark .glow-card {
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Smooth page animations */
+    .view-transition {
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .view-hidden {
+      display: none !important;
+      opacity: 0;
+      transform: scale(0.985);
+    }
+
+    /* Module animation */
+    .crm-module {
+      animation: fadeInModule 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fadeInModule {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col bg-slate-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-blue-600 selection:text-white transition-colors duration-200">
+
+  <!-- ================= TOP FLOATING CONTROLLER ================= -->
+  <div class="fixed top-3 right-4 z-50 flex items-center gap-2 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 shadow-xl text-xs">
+    <div class="flex items-center gap-1.5 pr-2 border-r border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span class="font-mono font-medium">Port 3001</span>
+      <span class="text-zinc-300 dark:text-zinc-700">|</span>
+      <span class="font-medium text-zinc-700 dark:text-zinc-300">领航 CRM (全模块版)</span>
+    </div>
+
+    <!-- View Mode Switcher -->
+    <div class="flex items-center bg-zinc-100 dark:bg-zinc-800 p-0.5 rounded-full">
+      <button id="switch-workbench" onclick="switchView('workbench')" class="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-zinc-700 text-brand-600 dark:text-blue-400 shadow-sm transition-all">
+        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+        <span>销售系统 (10大模块)</span>
+      </button>
+      <button id="switch-login" onclick="switchView('login')" class="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all">
+        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+        <span>登录认证页</span>
+      </button>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button id="theme-toggle" onclick="toggleTheme()" class="p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors ml-1" title="切换深色/浅色模式">
+      <i id="theme-icon-sun" data-lucide="sun" class="w-3.5 h-3.5 hidden"></i>
+      <i id="theme-icon-moon" data-lucide="moon" class="w-3.5 h-3.5"></i>
+    </button>
+  </div>
+
+  <!-- ================= VIEW 1: 领航 CRM 登录 (Node 2:7479, 1440x1024) ================= -->
+  <div id="view-login" class="view-transition min-h-screen flex flex-col justify-between relative overflow-hidden bg-slate-50 dark:bg-[#09090b] view-hidden">
+    <!-- Ambient Gradient Blobs -->
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-blue-500/15 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-1/2 -right-40 w-[30rem] h-[30rem] bg-indigo-500/15 dark:bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Login Container -->
+    <div class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12 relative z-10">
+      <div class="w-full max-w-5xl bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
+        
+        <!-- Left Column: Enterprise Brand Showcase (5 cols) -->
+        <div class="lg:col-span-5 bg-gradient-to-br from-brand-600 via-blue-600 to-indigo-800 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.15)_1px,transparent_0)] bg-[length:24px_24px] pointer-events-none opacity-40"></div>
+          
+          <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-inner">
+                <i data-lucide="compass" class="w-6 h-6 text-white"></i>
+              </div>
+              <div>
+                <span class="text-xl font-bold tracking-tight block">领航 CRM</span>
+                <span class="text-xs text-blue-100/80 font-medium">Navigator Cloud Enterprise</span>
+              </div>
+            </div>
+
+            <div class="mt-8 space-y-4">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-blue-100">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                AI 驱动的下一代智能销售云
+              </span>
+              <h1 class="text-3xl font-extrabold tracking-tight leading-snug">
+                赋能万千销售精英，<br>驱动企业全流程确定性增长。
+              </h1>
+              <p class="text-sm text-blue-100/90 leading-relaxed font-normal">
+                从线索智能评级、全生命周期商机推进，到智能预测与合同回款，让每一次客户沟通更有成效。
+              </p>
+            </div>
+          </div>
+
+          <div class="relative z-10 py-6 border-y border-white/15 my-6 grid grid-cols-2 gap-4">
+            <div>
+              <div class="text-2xl font-extrabold tracking-tight">98.4%</div>
+              <div class="text-xs text-blue-100/80 mt-0.5">大客户续费与满意率</div>
+            </div>
+            <div>
+              <div class="text-2xl font-extrabold tracking-tight">-35%</div>
+              <div class="text-xs text-blue-100/80 mt-0.5">平均商机成交推进周期</div>
+            </div>
+            <div>
+              <div class="text-2xl font-extrabold tracking-tight">12,000+</div>
+              <div class="text-xs text-blue-100/80 mt-0.5">全球企业共同信赖</div>
+            </div>
+            <div>
+              <div class="text-2xl font-extrabold tracking-tight">4.2x</div>
+              <div class="text-xs text-blue-100/80 mt-0.5">销售人均效能提升</div>
+            </div>
+          </div>
+
+          <div class="relative z-10 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15">
+            <p class="text-xs italic text-blue-50 leading-relaxed">
+              “领航 CRM 让我们的 500+ 人销售团队实现了从线索到交付的无缝协同，商机转化率在两个季度内跃升了 40%。”
+            </p>
+            <div class="mt-3 flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-xs">张</div>
+              <div>
+                <div class="text-xs font-semibold">张卫华</div>
+                <div class="text-[11px] text-blue-200">未来智造科技 · 营销副总裁</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Login Interactive Form (7 cols) -->
+        <div class="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between bg-white dark:bg-zinc-900">
+          <div>
+            <div class="flex items-center justify-between mb-8">
+              <div>
+                <h2 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">欢迎登录领航 CRM</h2>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">请输入您的企业账号或使用 SSO 单点登录</p>
+              </div>
+              <span class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                ISO 27001 认证
+              </span>
+            </div>
+
+            <!-- Login Method Tabs -->
+            <div class="flex border-b border-zinc-200 dark:border-zinc-800 mb-6 space-x-6 text-sm">
+              <button id="tab-login-account" onclick="switchLoginTab('account')" class="pb-3 border-b-2 border-brand-500 font-semibold text-brand-600 dark:text-blue-400 transition-colors">
+                企业账号密码
+              </button>
+              <button id="tab-login-sms" onclick="switchLoginTab('sms')" class="pb-3 border-b-2 border-transparent font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors">
+                手机短信免密
+              </button>
+              <button id="tab-login-qrcode" onclick="switchLoginTab('qrcode')" class="pb-3 border-b-2 border-transparent font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors">
+                企微 / 钉钉扫码
+              </button>
+            </div>
+
+            <!-- Form: Account & Password -->
+            <form id="login-form-account" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">企业账号 / 邮箱 / 工号</label>
+                <div class="relative rounded-xl shadow-sm">
+                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                  </div>
+                  <input type="text" id="login-account-input" value="chenming@navigator.cn" required
+                    placeholder="name@company.com" 
+                    class="block w-full pl-10 pr-3 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:ring-blue-500 transition-colors">
+                </div>
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">安全密码</label>
+                  <a href="javascript:void(0)" onclick="showToast('已向管理员邮箱发送密码重置链接')" class="text-xs font-medium text-brand-600 dark:text-blue-400 hover:underline">
+                    忘记密码？
+                  </a>
+                </div>
+                <div class="relative rounded-xl shadow-sm">
+                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                  </div>
+                  <input type="password" id="login-pwd-input" value="••••••••••••" required
+                    placeholder="输入企业登录密码"
+                    class="block w-full pl-10 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:ring-blue-500 transition-colors font-mono">
+                  <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                    <i id="pwd-eye-icon" data-lucide="eye" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between py-1">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked class="w-4 h-4 text-brand-600 rounded border-zinc-300 dark:border-zinc-700 focus:ring-brand-500">
+                  <span class="text-xs text-zinc-600 dark:text-zinc-400">记住此工作设备 (30天内免密)</span>
+                </label>
+                <span class="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                  <i data-lucide="check-circle" class="w-3 h-3"></i> 内部专网加速中
+                </span>
+              </div>
+
+              <button type="submit" class="w-full mt-2 py-3 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2 group">
+                <span>登 录 进 入 工 作 台</span>
+                <i data-lucide="arrow-right" class="w-4 h-4 transition-transform group-hover:translate-x-1"></i>
+              </button>
+            </form>
+
+            <!-- SMS Tab -->
+            <div id="login-form-sms" class="hidden space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">手机号码</label>
+                <div class="flex gap-2">
+                  <span class="inline-flex items-center px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono text-zinc-600 dark:text-zinc-300">+86</span>
+                  <input type="tel" placeholder="138 0000 0000" class="block w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">短信验证码</label>
+                <div class="flex gap-2">
+                  <input type="text" placeholder="6 位验证码" class="block w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500">
+                  <button type="button" onclick="showToast('验证码已发送至手机: 829104')" class="px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-brand-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 whitespace-nowrap">获取验证码</button>
+                </div>
+              </div>
+              <button type="button" onclick="switchView('workbench'); showToast('手机短信验证成功，已进入销售系统！');" class="w-full mt-2 py-3 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2">
+                <span>验证并登录</span>
+              </button>
+            </div>
+
+            <!-- QR Code Tab -->
+            <div id="login-form-qrcode" class="hidden py-6 text-center space-y-4">
+              <div class="w-48 h-48 mx-auto p-3 bg-white border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-inner flex items-center justify-center relative">
+                <div class="w-full h-full bg-zinc-900 rounded-lg p-2 flex flex-col justify-between">
+                  <div class="flex justify-between">
+                    <div class="w-10 h-10 bg-white rounded flex items-center justify-center"><div class="w-5 h-5 bg-zinc-900 rounded-sm"></div></div>
+                    <div class="w-10 h-10 bg-white rounded flex items-center justify-center"><div class="w-5 h-5 bg-zinc-900 rounded-sm"></div></div>
+                  </div>
+                  <div class="flex items-center justify-center text-white text-[10px] font-mono tracking-wider">
+                    SCAN TO LOGIN
+                  </div>
+                  <div class="flex justify-between items-end">
+                    <div class="w-10 h-10 bg-white rounded flex items-center justify-center"><div class="w-5 h-5 bg-zinc-900 rounded-sm"></div></div>
+                    <div class="w-8 h-8 border-2 border-white rounded-full flex items-center justify-center"><i data-lucide="compass" class="w-4 h-4 text-white"></i></div>
+                  </div>
+                </div>
+              </div>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">使用 企业微信 / 飞书 / 钉钉 App 扫码快速授权</p>
+              <button onclick="switchView('workbench'); showToast('企微扫码授权成功，欢迎回来！');" class="text-xs text-brand-600 dark:text-blue-400 hover:underline">
+                [模拟扫码完成一键授权]
+              </button>
+            </div>
+
+            <!-- Enterprise SSO Divider -->
+            <div class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+              <div class="text-center relative">
+                <span class="bg-white dark:bg-zinc-900 px-3 text-xs text-zinc-400 font-medium relative -top-2.5">企业统一身份 SSO</span>
+              </div>
+              <div class="grid grid-cols-4 gap-2.5 mt-2">
+                <button onclick="switchView('workbench'); showToast('企业微信 SSO 登录成功');" class="flex flex-col items-center justify-center py-2 px-1 border border-zinc-200 dark:border-zinc-700/80 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors">
+                  <i data-lucide="message-square" class="w-4 h-4 text-emerald-600 mb-1"></i>
+                  <span class="text-[11px] text-zinc-600 dark:text-zinc-300">企业微信</span>
+                </button>
+                <button onclick="switchView('workbench'); showToast('飞书 SSO 登录成功');" class="flex flex-col items-center justify-center py-2 px-1 border border-zinc-200 dark:border-zinc-700/80 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors">
+                  <i data-lucide="send" class="w-4 h-4 text-blue-500 mb-1"></i>
+                  <span class="text-[11px] text-zinc-600 dark:text-zinc-300">飞书</span>
+                </button>
+                <button onclick="switchView('workbench'); showToast('钉钉 SSO 登录成功');" class="flex flex-col items-center justify-center py-2 px-1 border border-zinc-200 dark:border-zinc-700/80 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors">
+                  <i data-lucide="zap" class="w-4 h-4 text-amber-500 mb-1"></i>
+                  <span class="text-[11px] text-zinc-600 dark:text-zinc-300">钉钉</span>
+                </button>
+                <button onclick="switchView('workbench'); showToast('SAML 2.0 登录成功');" class="flex flex-col items-center justify-center py-2 px-1 border border-zinc-200 dark:border-zinc-700/80 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors">
+                  <i data-lucide="key-round" class="w-4 h-4 text-purple-500 mb-1"></i>
+                  <span class="text-[11px] text-zinc-600 dark:text-zinc-300">SAML/OIDC</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 text-center text-xs text-zinc-400 dark:text-zinc-500 space-y-1">
+            <p>首次使用或无法登录？请联系 <a href="javascript:void(0)" onclick="showToast('技术支持热线: 400-880-9988')" class="text-brand-600 dark:text-blue-400 hover:underline">企业IT管理员</a> 开通销售权限</p>
+            <p>© 2026 领航云科 (Navigator SaaS) · 服务协议与隐私政策 · 粤ICP备20260812号</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= VIEW 2: 领航 CRM 主系统 (包含全部10大模块) ================= -->
+  <div id="view-workbench" class="view-transition flex flex-col flex-1 h-screen overflow-hidden">
+    
+    <!-- ================= TOP HEADER ================= -->
+    <header class="h-16 flex-none bg-white dark:bg-[#121316] border-b border-zinc-200 dark:border-zinc-800 z-30 px-4 lg:px-6 flex items-center justify-between">
+      
+      <!-- Brand & Breadcrumb -->
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <i data-lucide="compass" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-base tracking-tight text-zinc-900 dark:text-zinc-100">领航 CRM</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-blue-400 font-semibold border border-brand-500/20">华东战区</span>
+            </div>
+            <span id="current-module-title" class="text-[11px] text-zinc-400 font-medium block -mt-0.5">销售工作台 · 全局仪表盘</span>
+          </div>
+        </div>
+
+        <!-- Global Search Bar -->
+        <div class="hidden md:flex items-center relative w-80 lg:w-96">
+          <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 pointer-events-none"></i>
+          <input type="text" id="global-crm-search" oninput="handleGlobalSearch(this.value)" placeholder="全局搜索客户、商机、线索或合同编号 (⌘K)..." 
+            class="w-full pl-9 pr-14 py-1.5 bg-zinc-100 dark:bg-zinc-800/80 border border-transparent focus:border-brand-500 dark:focus:border-blue-500 focus:bg-white dark:focus:bg-zinc-900 rounded-xl text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 transition-all outline-none">
+          <kbd class="absolute right-2.5 px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300 rounded border border-zinc-200 dark:border-zinc-600 shadow-xs pointer-events-none">⌘K</kbd>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons & User Menu -->
+      <div class="flex items-center gap-3">
+        <button onclick="openModal('modal-new-deal')" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-xs font-semibold shadow-sm shadow-brand-500/25 transition-all">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span>新建商机</span>
+        </button>
+
+        <button onclick="openModal('modal-new-lead')" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all">
+          <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+          <span>录入线索</span>
+        </button>
+
+        <div class="h-5 w-px bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
+
+        <!-- Notification Bell -->
+        <div class="relative">
+          <button onclick="toggleNotificationDropdown()" class="p-2 rounded-xl text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors relative">
+            <i data-lucide="bell" class="w-4 h-4"></i>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-zinc-900"></span>
+          </button>
+          
+          <div id="dropdown-notifications" class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800 p-3 z-50">
+            <div class="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800 px-1">
+              <span class="text-xs font-bold text-zinc-800 dark:text-zinc-200">待办与预警提醒 (3)</span>
+              <button onclick="showToast('全部标记为已读')" class="text-[11px] text-brand-600 dark:text-blue-400 hover:underline">全部已读</button>
+            </div>
+            <div class="mt-2 space-y-2 text-xs">
+              <div class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
+                <div class="font-semibold text-amber-800 dark:text-amber-300">大华股份 ¥2,400,000 合同待审批</div>
+                <div class="text-[11px] text-amber-700/80 dark:text-amber-400 mt-0.5">法务已完成初审，等待销售副总审批签署。</div>
+              </div>
+              <div class="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60">
+                <div class="font-semibold text-blue-800 dark:text-blue-300">顺丰科技 今日 14:00 方案答辩提醒</div>
+                <div class="text-[11px] text-blue-700/80 dark:text-blue-400 mt-0.5">请提前 15 分钟准备好系统核心架构演示。</div>
+              </div>
+              <div class="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60">
+                <div class="font-semibold text-rose-800 dark:text-rose-300">中科曙光 商机超 14 天未跟进</div>
+                <div class="text-[11px] text-rose-700/80 dark:text-rose-400 mt-0.5">即将触发公海自动回收机制。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Assistant Trigger -->
+        <button onclick="switchModule('ai-copilot')" class="p-2 rounded-xl text-brand-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors relative" title="进入 AI 销售智能体">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+        </button>
+
+        <!-- User Profile Pill -->
+        <div class="flex items-center gap-2.5 pl-2 border-l border-zinc-200 dark:border-zinc-800">
+          <div class="relative">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80" alt="Avatar" class="w-8 h-8 rounded-full object-cover ring-2 ring-brand-500/20">
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900"></span>
+          </div>
+          <div class="hidden xl:block text-left">
+            <div class="text-xs font-bold leading-none text-zinc-900 dark:text-zinc-100">陈明</div>
+            <div class="text-[10px] text-zinc-400 mt-0.5">华东大区 · 销售总监</div>
+          </div>
+          <button onclick="switchView('login'); showToast('您已成功退出工作台');" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1" title="退出到登录页">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= MAIN WORKSPACE BODY ================= -->
+    <div class="flex-1 flex overflow-hidden">
+      
+      <!-- ================= SIDEBAR NAVIGATION (10 MODULES) ================= -->
+      <aside class="w-64 flex-none bg-white dark:bg-[#121316] border-r border-zinc-200 dark:border-zinc-800 flex flex-col justify-between overflow-y-auto custom-scrollbar select-none">
+        <div class="p-3 space-y-6">
+          
+          <!-- Group 1: 核心销售 -->
+          <div>
+            <div class="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">核心销售</div>
+            <nav class="space-y-1 text-xs">
+              <a href="javascript:void(0)" onclick="switchModule('dashboard', this)" data-mod="dashboard" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-xl bg-brand-50 dark:bg-blue-950/60 font-semibold text-brand-600 dark:text-blue-400 transition-colors">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span class="flex-1">销售工作台</span>
+                <span class="px-1.5 py-0.5 text-[10px] rounded-full bg-brand-500 text-white font-mono">Live</span>
+              </a>
+              <a href="javascript:void(0)" onclick="switchModule('leads', this)" data-mod="leads" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors">
+                <i data-lucide="target" class="w-4 h-4"></i>
+                <span class="flex-1">线索管理</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-mono">24</span>
+              </a>
+              <a href="javascript:void(0)" onclick="switchModule('customers', this)" data-mod="customers" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors">
+                <i data-lucide="building-2" class="w-4 h-4"></i>
+                <span class="flex-1">客户与公海池</span>
+              </a>
+              <a href="javascript:void(0)" onclick="switchModule('deals', this)" data-mod="deals" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors">
+                <i data-lucide="kanban" class="w-4 h-4"></i>
+                <span class="flex-1">商机漏斗看板</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 font-mono">18</span>
+              </a>
+            </nav>
+          </div>
+
+          <!-- Group 2: 商务与签约 -->
+          <div>
+            <div class="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">商务与交易</div>
+            <nav class="space-y-1 text-xs">
+              <a href="javascript:void(0)" onclick="switchModule('contracts', this)" data-mod="contracts" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors">
+                <i data-lucide="file-check-2" class="w-4 h-4"></i>
+                <span class="flex-1">合同与订单审批</span>
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+              </a>
+              <a href="javascript:void(0)" onclick="switchModule('payments', this)" data-mod="payments" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors">
+                <i data-lucide="receipt" class="w-4 h-4"></i>
+                <span class="flex-1">回款与发票</span>
+              </a>
+              <a href="javascript:void(0)" onclick="switchModule('products', this)" data-mod="products" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors">
+                <i data-lucide="calculator" class="w-4 h-4"></i>
+                <span class="flex-1">产品与报价 (CPQ)</span>
+              </a>
+            </nav>
+          </div>
+
+          <!-- Group 3: 数据智能 -->
+          <div>
+            <div class="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">数据与协同</div>
+            <nav class="space-y-1 text-xs">
+              <a href="javascript:void(0)" onclick="switchModule('leaderboard', this)" data-mod="leaderboard" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors">
+                <i data-lucide="trophy" class="w-4 h-4"></i>
+                <span class="flex-1">战区业绩排行榜</span>
+                <span class="text-[10px] text-amber-500 font-bold">TOP 1</span>
+              </a>
+              <a href="javascript:void(0)" onclick="switchModule('analytics', this)" data-mod="analytics" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors">
+                <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                <span class="flex-1">销售 BI 报表</span>
+              </a>
+              <a href="javascript:void(0)" onclick="switchModule('ai-copilot', this)" data-mod="ai-copilot" class="sidebar-item flex items-center gap-3 px-3 py-2 rounded-xl font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-colors">
+                <i data-lucide="bot" class="w-4 h-4"></i>
+                <span class="flex-1">AI 销售赋能助手</span>
+                <span class="px-1.5 py-0.5 text-[9px] rounded bg-purple-100 dark:bg-purple-900/60 font-bold text-purple-700 dark:text-purple-300">Beta</span>
+              </a>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Sidebar Footer: Monthly Quota Progress Widget -->
+        <div class="p-3 border-t border-zinc-200 dark:border-zinc-800">
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-zinc-800/80 dark:to-zinc-800/40 rounded-2xl p-3.5 border border-blue-100 dark:border-zinc-700/60">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="font-bold text-zinc-800 dark:text-zinc-200">本月目标进度</span>
+              <span class="font-mono font-bold text-brand-600 dark:text-blue-400">82.5%</span>
+            </div>
+            <div class="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2 overflow-hidden mb-2">
+              <div class="bg-gradient-to-r from-brand-500 to-indigo-500 h-2 rounded-full" style="width: 82.5%"></div>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+              <span>已回款 ¥82.5万</span>
+              <span>差 ¥17.5万</span>
+            </div>
+            <div class="mt-2 pt-2 border-t border-blue-200/50 dark:border-zinc-700/50 flex items-center justify-between text-[10px] text-zinc-400">
+              <span>距离考核截止</span>
+              <span class="font-semibold text-rose-500">倒计时 6 天</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ================= MAIN SCROLLABLE VIEWPORT ================= -->
+      <main id="main-content-viewport" class="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 space-y-6">
+
+        <!-- ================= MODULE 1: 销售工作台 (DASHBOARD) ================= -->
+        <div id="module-dashboard" class="crm-module space-y-6">
+          
+          <!-- Banner & Greeting -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#121316] rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 glow-card">
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 class="text-xl lg:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                  上午好，陈明！✨
+                </h1>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 font-semibold">
+                  战区排名 No.1
+                </span>
+              </div>
+              <p class="text-xs lg:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                今日建议优先跟进 <span class="font-semibold text-brand-600 dark:text-blue-400">华泰证券</span> 与 <span class="font-semibold text-brand-600 dark:text-blue-400">大华股份</span> 的2笔大额商机，本月有望突破 ¥1,000,000 封顶目标！
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-xl self-start md:self-auto text-xs">
+              <button onclick="setFilterPeriod('month', this)" class="period-btn px-3 py-1.5 rounded-lg font-semibold bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-xs transition-all">本月 (09月)</button>
+              <button onclick="setFilterPeriod('quarter', this)" class="period-btn px-3 py-1.5 rounded-lg font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 transition-all">本季度 (Q3)</button>
+              <button onclick="setFilterPeriod('year', this)" class="period-btn px-3 py-1.5 rounded-lg font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 transition-all">本年度 2026</button>
+            </div>
+          </div>
+
+          <!-- 4 KPI Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-[#121316] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card relative overflow-hidden group hover:border-brand-500/40 transition-all">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">本月完成销售额 (实际)</span>
+                <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-brand-600 dark:text-blue-400 flex items-center justify-center">
+                  <i data-lucide="badge-dollar-sign" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <div class="mt-3">
+                <div class="text-2xl font-extrabold tracking-tight font-mono text-zinc-900 dark:text-zinc-100">¥825,400</div>
+                <div class="mt-2 flex items-center gap-2 text-xs">
+                  <span class="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-semibold font-mono">
+                    <i data-lucide="trending-up" class="w-3.5 h-3.5 mr-0.5"></i> +18.4%
+                  </span>
+                  <span class="text-zinc-400">环比上月</span>
+                  <span class="text-zinc-300 dark:text-zinc-700">·</span>
+                  <span class="text-zinc-500 dark:text-zinc-400">目标 100万</span>
+                </div>
+              </div>
+              <div class="mt-3 w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-brand-500 h-1.5 rounded-full" style="width: 82.5%"></div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-[#121316] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card relative overflow-hidden group hover:border-purple-500/40 transition-all">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">进行中商机金额 (Pipeline)</span>
+                <div class="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                  <i data-lucide="layers" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <div class="mt-3">
+                <div class="text-2xl font-extrabold tracking-tight font-mono text-zinc-900 dark:text-zinc-100">¥3,420,000</div>
+                <div class="mt-2 flex items-center gap-2 text-xs">
+                  <span class="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-semibold font-mono">
+                    <i data-lucide="trending-up" class="w-3.5 h-3.5 mr-0.5"></i> +24.2%
+                  </span>
+                  <span class="text-zinc-400">活跃商机 28 个</span>
+                </div>
+              </div>
+              <div class="mt-3 w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-purple-500 h-1.5 rounded-full" style="width: 68%"></div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-[#121316] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">综合赢单转化率 (Win Rate)</span>
+                <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <i data-lucide="check-check" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <div class="mt-3">
+                <div class="text-2xl font-extrabold tracking-tight font-mono text-zinc-900 dark:text-zinc-100">42.8%</div>
+                <div class="mt-2 flex items-center gap-2 text-xs">
+                  <span class="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-semibold font-mono">
+                    <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 mr-0.5"></i> +6.5%
+                  </span>
+                  <span class="text-zinc-400">高于行业均值 (28%)</span>
+                </div>
+              </div>
+              <div class="mt-3 w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 42.8%"></div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-[#121316] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card relative overflow-hidden group hover:border-amber-500/40 transition-all">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">今日待跟进事项</span>
+                <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <i data-lucide="calendar-check-2" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <div class="mt-3">
+                <div class="text-2xl font-extrabold tracking-tight font-mono text-zinc-900 dark:text-zinc-100">8 <span class="text-sm font-normal text-zinc-400">项待办</span></div>
+                <div class="mt-2 flex items-center gap-2 text-xs">
+                  <span class="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 font-semibold font-mono text-[11px]">3 项高优先</span>
+                  <span class="text-zinc-400">已完成 5/13</span>
+                </div>
+              </div>
+              <div class="mt-3 w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-1.5 rounded-full" style="width: 38%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts & Funnel Row -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-8 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                    <i data-lucide="line-chart" class="w-4 h-4 text-brand-500"></i>
+                    2026 年度销售业绩趋势与月度考核目标
+                  </h3>
+                  <p class="text-xs text-zinc-400 mt-0.5">实际签约回款金额 vs 战区下达考核指标 (单位: 万元)</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-brand-500 inline-block"></span>
+                    <span class="text-zinc-600 dark:text-zinc-300 font-medium">实际销售额</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-600 inline-block"></span>
+                    <span class="text-zinc-500 dark:text-zinc-400 font-medium">考核目标</span>
+                  </div>
+                </div>
+              </div>
+              <div class="w-full h-72">
+                <canvas id="crm-sales-trend-chart"></canvas>
+              </div>
+            </div>
+
+            <div class="lg:col-span-4 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                    <i data-lucide="filter" class="w-4 h-4 text-purple-500"></i>
+                    商机转化漏斗
+                  </h3>
+                  <p class="text-xs text-zinc-400 mt-0.5">从线索接触到赢单的转化率</p>
+                </div>
+                <span class="text-xs font-mono font-semibold text-purple-600 dark:text-purple-400">总计 48 个</span>
+              </div>
+
+              <div class="space-y-3.5 my-auto">
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">1. 初步接触 / 需求调研</span>
+                    <span class="font-mono text-zinc-500">22 个 · ¥480万</span>
+                  </div>
+                  <div class="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-3 overflow-hidden">
+                    <div class="bg-blue-500 h-3 rounded-full" style="width: 100%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">2. 方案呈现 / 技术验证</span>
+                    <span class="font-mono text-zinc-500">15 个 · ¥310万</span>
+                  </div>
+                  <div class="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-3 overflow-hidden">
+                    <div class="bg-indigo-500 h-3 rounded-full" style="width: 68%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">3. 商务谈判 / 标书审核</span>
+                    <span class="font-mono text-zinc-500">8 个 · ¥190万</span>
+                  </div>
+                  <div class="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-3 overflow-hidden">
+                    <div class="bg-purple-500 h-3 rounded-full" style="width: 36%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">4. 签约赢单 / 待回款</span>
+                    <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">3 个 · ¥82.5万</span>
+                  </div>
+                  <div class="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-3 overflow-hidden">
+                    <div class="bg-emerald-500 h-3 rounded-full" style="width: 14%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 p-3 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/50 flex items-center justify-between text-xs">
+                <span class="text-purple-700 dark:text-purple-300">商务谈判阶段转化率最高</span>
+                <span class="font-bold font-mono text-purple-700 dark:text-purple-300">68.2% ↑</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Customer Table Snippet in Dashboard -->
+          <div class="bg-white dark:bg-[#121316] rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card overflow-hidden">
+            <div class="p-6 border-b border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-base font-bold text-zinc-900 dark:text-zinc-100">重点客户跟进动态</h3>
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-blue-950/60 text-brand-600 dark:text-blue-400 font-semibold">当月 VIP 核心</span>
+                </div>
+                <p class="text-xs text-zinc-400 mt-0.5">显示近期有重大签约推进的重点企业客户</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="switchModule('customers')" class="text-xs text-brand-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold">
+                  进入完整客户池管理 →
+                </button>
+              </div>
+            </div>
+
+            <!-- Table Rows -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs" id="crm-main-table">
+                <thead class="bg-zinc-50/80 dark:bg-zinc-900/60 text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800 uppercase font-semibold">
+                  <tr>
+                    <th scope="col" class="py-3.5 px-4 w-10"><input type="checkbox" onchange="toggleSelectAll(this)" class="w-3.5 h-3.5 text-brand-600 rounded"></th>
+                    <th scope="col" class="py-3.5 px-4">客户企业名称</th>
+                    <th scope="col" class="py-3.5 px-4">关键联系人 / 职务</th>
+                    <th scope="col" class="py-3.5 px-4">进行中商机与金额</th>
+                    <th scope="col" class="py-3.5 px-4">阶段状态</th>
+                    <th scope="col" class="py-3.5 px-4">最近跟进记录</th>
+                    <th scope="col" class="py-3.5 px-4">下次计划时间</th>
+                    <th scope="col" class="py-3.5 px-4 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800/80" id="customer-table-body">
+                  <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                    <td class="py-3.5 px-4"><input type="checkbox" class="row-checkbox w-3.5 h-3.5 text-brand-600 rounded"></td>
+                    <td class="py-3.5 px-4">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-brand-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">大华</div>
+                        <div>
+                          <div class="font-bold text-zinc-900 dark:text-zinc-100">浙江大华技术股份有限公司</div>
+                          <div class="text-[10px] text-zinc-400">智能安防 / 杭州 · A股上市公司</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <div class="font-medium">孙志宏</div>
+                      <div class="text-[10px] text-zinc-400">采购副总裁 · 139****8820</div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <div class="font-mono font-bold text-brand-600 dark:text-blue-400">¥2,400,000</div>
+                      <div class="text-[10px] text-zinc-400">视频集群分析授权</div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">商务谈判</span>
+                    </td>
+                    <td class="py-3.5 px-4 max-w-xs">
+                      <div class="truncate text-zinc-600 dark:text-zinc-300">昨天 16:30 法务已确认合同样本，等待周四上会终审。</div>
+                      <div class="text-[10px] text-zinc-400">记录人: 陈明</div>
+                    </td>
+                    <td class="py-3.5 px-4 font-mono text-[11px]"><span class="text-rose-500 font-semibold">09-29 10:00 (明天)</span></td>
+                    <td class="py-3.5 px-4 text-right">
+                      <button onclick="openFollowupDrawer('浙江大华技术股份有限公司')" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-brand-500 hover:text-white text-zinc-700 dark:text-zinc-300 transition-colors">写跟进</button>
+                    </td>
+                  </tr>
+
+                  <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                    <td class="py-3.5 px-4"><input type="checkbox" class="row-checkbox w-3.5 h-3.5 text-brand-600 rounded"></td>
+                    <td class="py-3.5 px-4">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xs">华泰</div>
+                        <div>
+                          <div class="font-bold text-zinc-900 dark:text-zinc-100">华泰证券股份有限公司</div>
+                          <div class="text-[10px] text-zinc-400">金融证券 / 南京 · 头部券商</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <div class="font-medium">陈子墨</div>
+                      <div class="text-[10px] text-zinc-400">资管科技总监 · 137****6612</div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <div class="font-mono font-bold text-brand-600 dark:text-blue-400">¥1,500,000</div>
+                      <div class="text-[10px] text-zinc-400">AI量化风控套件二期</div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800">商务谈判</span>
+                    </td>
+                    <td class="py-3.5 px-4 max-w-xs">
+                      <div class="truncate text-zinc-600 dark:text-zinc-300">今天 10:00 完成采购价格二轮磋商，折扣降幅控制在 8% 以内。</div>
+                      <div class="text-[10px] text-zinc-400">记录人: 陈明</div>
+                    </td>
+                    <td class="py-3.5 px-4 font-mono text-[11px]"><span class="text-amber-500 font-semibold">09-30 14:00</span></td>
+                    <td class="py-3.5 px-4 text-right">
+                      <button onclick="openFollowupDrawer('华泰证券股份有限公司')" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-brand-500 hover:text-white text-zinc-700 dark:text-zinc-300 transition-colors">写跟进</button>
+                    </td>
+                  </tr>
+
+                  <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                    <td class="py-3.5 px-4"><input type="checkbox" class="row-checkbox w-3.5 h-3.5 text-brand-600 rounded"></td>
+                    <td class="py-3.5 px-4">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">顺丰</div>
+                        <div>
+                          <div class="font-bold text-zinc-900 dark:text-zinc-100">顺丰科技有限公司</div>
+                          <div class="text-[10px] text-zinc-400">物流科技 / 深圳 · 行业龙头</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <div class="font-medium">林国栋</div>
+                      <div class="text-[10px] text-zinc-400">技术规划副总裁 · 135****9901</div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <div class="font-mono font-bold text-brand-600 dark:text-blue-400">¥850,000</div>
+                      <div class="text-[10px] text-zinc-400">智慧供应链预测引擎</div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">方案呈现</span>
+                    </td>
+                    <td class="py-3.5 px-4 max-w-xs">
+                      <div class="truncate text-zinc-600 dark:text-zinc-300">提交技术白皮书与 POC 测试报告，对方架构师反馈良好。</div>
+                      <div class="text-[10px] text-zinc-400">记录人: 李晓鹏</div>
+                    </td>
+                    <td class="py-3.5 px-4 font-mono text-[11px]"><span class="text-rose-500 font-semibold">今日 14:00 (急)</span></td>
+                    <td class="py-3.5 px-4 text-right">
+                      <button onclick="openFollowupDrawer('顺丰科技有限公司')" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-brand-500 hover:text-white text-zinc-700 dark:text-zinc-300 transition-colors">写跟进</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+
+        <!-- ================= MODULE 2: 线索管理 (LEADS MANAGEMENT) ================= -->
+        <div id="module-leads" class="crm-module hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-zinc-900 dark:text-zinc-100">全域线索池管理 (Leads Management)</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-brand-600 dark:text-blue-400 text-xs font-semibold">自动智能清洗</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-1">涵盖官网咨询、市场峰会、合作伙伴与渠道转介绍等多来源线索全流程跟进</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openModal('modal-new-lead')" class="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-sm flex items-center gap-1.5 transition-all">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>录入新线索</span>
+              </button>
+              <button onclick="batchAssignLeads()" class="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 text-xs font-medium text-zinc-700 dark:text-zinc-200 flex items-center gap-1.5 transition-colors">
+                <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                <span>批量智能派单</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Leads KPI Row -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-[#121316] p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="text-xs text-zinc-400">今日新增线索</div>
+              <div class="text-2xl font-mono font-bold mt-1 text-zinc-900 dark:text-zinc-100">+12 <span class="text-xs text-emerald-500 font-normal">↑ 18%</span></div>
+            </div>
+            <div class="bg-white dark:bg-[#121316] p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="text-xs text-zinc-400">待跟进分配</div>
+              <div class="text-2xl font-mono font-bold mt-1 text-amber-500">24 条</div>
+            </div>
+            <div class="bg-white dark:bg-[#121316] p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="text-xs text-zinc-400">A级高潜线索</div>
+              <div class="text-2xl font-mono font-bold mt-1 text-purple-600">18 家</div>
+            </div>
+            <div class="bg-white dark:bg-[#121316] p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="text-xs text-zinc-400">当月线索转化率</div>
+              <div class="text-2xl font-mono font-bold mt-1 text-emerald-600">28.4%</div>
+            </div>
+          </div>
+
+          <!-- Leads Data Table -->
+          <div class="bg-white dark:bg-[#121316] rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card overflow-hidden">
+            <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <button onclick="filterLeadsCategory('all', this)" class="leads-cat-btn px-3 py-1 rounded-lg text-xs font-semibold bg-brand-500 text-white">全部 (88)</button>
+                <button onclick="filterLeadsCategory('待跟进', this)" class="leads-cat-btn px-3 py-1 rounded-lg text-xs font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">待跟进 (24)</button>
+                <button onclick="filterLeadsCategory('跟进中', this)" class="leads-cat-btn px-3 py-1 rounded-lg text-xs font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">跟进中 (36)</button>
+                <button onclick="filterLeadsCategory('已转商机', this)" class="leads-cat-btn px-3 py-1 rounded-lg text-xs font-medium text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">已转商机 (28)</button>
+              </div>
+              <input type="text" oninput="searchLeads(this.value)" placeholder="搜索线索公司/联系人..." class="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none w-48">
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs" id="leads-table">
+                <thead class="bg-zinc-50/80 dark:bg-zinc-900/60 text-zinc-400 uppercase font-semibold border-b border-zinc-200 dark:border-zinc-800">
+                  <tr>
+                    <th class="py-3 px-4">企业客户名称</th>
+                    <th class="py-3 px-4">联系人 / 手机</th>
+                    <th class="py-3 px-4">意向级别</th>
+                    <th class="py-3 px-4">线索来源渠道</th>
+                    <th class="py-3 px-4">当前状态</th>
+                    <th class="py-3 px-4">负责销售</th>
+                    <th class="py-3 px-4 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800/80" id="leads-tbody">
+                  <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                    <td class="py-3 px-4 font-bold text-zinc-900 dark:text-zinc-100">上海哔哩哔哩科技有限公司</td>
+                    <td class="py-3 px-4">张博雅 · 139****1182</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 font-bold text-[10px]">A级 · 高意向</span></td>
+                    <td class="py-3 px-4 text-zinc-500">2026 全球智能大会展台</td>
+                    <td class="py-3 px-4"><span class="text-amber-500 font-medium">跟进中</span></td>
+                    <td class="py-3 px-4">陈明</td>
+                    <td class="py-3 px-4 text-right">
+                      <button onclick="convertLeadToDeal('上海哔哩哔哩科技有限公司', '张博雅')" class="px-2.5 py-1 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium text-[11px] shadow-xs">一键转商机</button>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                    <td class="py-3 px-4 font-bold text-zinc-900 dark:text-zinc-100">南京中兴软创科技</td>
+                    <td class="py-3 px-4">刘建军 · 138****9923</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 font-bold text-[10px]">B级 · 中意向</span></td>
+                    <td class="py-3 px-4 text-zinc-500">官方网站表单留资</td>
+                    <td class="py-3 px-4"><span class="text-blue-500 font-medium">待跟进</span></td>
+                    <td class="py-3 px-4">李晓鹏</td>
+                    <td class="py-3 px-4 text-right">
+                      <button onclick="convertLeadToDeal('南京中兴软创科技', '刘建军')" class="px-2.5 py-1 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium text-[11px] shadow-xs">一键转商机</button>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                    <td class="py-3 px-4 font-bold text-zinc-900 dark:text-zinc-100">苏州汇川技术股份有限公司</td>
+                    <td class="py-3 px-4">朱伟 · 150****6621</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 font-bold text-[10px]">A级 · 高意向</span></td>
+                    <td class="py-3 px-4 text-zinc-500">老客户转介绍</td>
+                    <td class="py-3 px-4"><span class="text-emerald-500 font-medium">已转商机</span></td>
+                    <td class="py-3 px-4">陈明</td>
+                    <td class="py-3 px-4 text-right">
+                      <span class="text-zinc-400 text-[11px]">已签约入库</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ================= MODULE 3: 客户与公海池 (CUSTOMERS & OPEN SEA) ================= -->
+        <div id="module-customers" class="crm-module hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-zinc-900 dark:text-zinc-100">客户资产与公海池 (Accounts & Open Sea)</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 text-xs font-semibold">15天超时自动流转公海</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-1">企业私海专属大客户保护与公共客户资源高效捡入流转机制</p>
+            </div>
+            <!-- Tab Switcher -->
+            <div class="flex items-center bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl text-xs">
+              <button id="cust-tab-private" onclick="switchCustomerTab('private')" class="px-3.5 py-1.5 rounded-lg font-semibold bg-white dark:bg-zinc-700 text-brand-600 dark:text-blue-400 shadow-xs transition-all">
+                我的私海客户 (28 家)
+              </button>
+              <button id="cust-tab-public" onclick="switchCustomerTab('public')" class="px-3.5 py-1.5 rounded-lg font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 transition-all">
+                公共客户公海池 (142 家)
+              </button>
+            </div>
+          </div>
+
+          <!-- Private Customers Section -->
+          <div id="cust-section-private" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="bg-white dark:bg-[#121316] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card space-y-3">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-950 text-amber-600 border border-amber-200">KA 战略大客户</span>
+                    <h4 class="font-bold text-sm text-zinc-900 dark:text-zinc-100 mt-2">浙江大华技术股份有限公司</h4>
+                    <p class="text-xs text-zinc-400">杭州 · 智能安防 · 年营收 320亿</p>
+                  </div>
+                  <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950 text-brand-600 font-bold text-xs flex items-center justify-center">大华</div>
+                </div>
+                <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 text-xs flex justify-between">
+                  <span>商机: 2个 (¥240万)</span>
+                  <span class="text-emerald-600 font-medium">离公海还剩 14 天</span>
+                </div>
+                <div class="flex gap-2 pt-1">
+                  <button onclick="openFollowupDrawer('浙江大华技术股份有限公司')" class="flex-1 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-brand-500 hover:text-white text-xs font-medium transition-colors">写跟进</button>
+                  <button onclick="releaseToOpenSea('浙江大华技术股份有限公司')" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 hover:text-rose-500">退回公海</button>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-[#121316] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card space-y-3">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 dark:bg-purple-950 text-purple-600 border border-purple-200">VIP 重点客户</span>
+                    <h4 class="font-bold text-sm text-zinc-900 dark:text-zinc-100 mt-2">华泰证券股份有限公司</h4>
+                    <p class="text-xs text-zinc-400">南京 · 金融科技 · 头部证券机构</p>
+                  </div>
+                  <div class="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-600 font-bold text-xs flex items-center justify-center">华泰</div>
+                </div>
+                <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 text-xs flex justify-between">
+                  <span>商机: 1个 (¥150万)</span>
+                  <span class="text-emerald-600 font-medium">离公海还剩 12 天</span>
+                </div>
+                <div class="flex gap-2 pt-1">
+                  <button onclick="openFollowupDrawer('华泰证券股份有限公司')" class="flex-1 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-brand-500 hover:text-white text-xs font-medium transition-colors">写跟进</button>
+                  <button onclick="releaseToOpenSea('华泰证券股份有限公司')" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 hover:text-rose-500">退回公海</button>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-[#121316] p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card space-y-3">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 dark:bg-blue-950 text-blue-600 border border-blue-200">成长型客户</span>
+                    <h4 class="font-bold text-sm text-zinc-900 dark:text-zinc-100 mt-2">顺丰科技有限公司</h4>
+                    <p class="text-xs text-zinc-400">深圳 · 智慧供应链系统</p>
+                  </div>
+                  <div class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 font-bold text-xs flex items-center justify-center">顺丰</div>
+                </div>
+                <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 text-xs flex justify-between">
+                  <span>商机: 1个 (¥85万)</span>
+                  <span class="text-rose-500 font-medium">离公海仅剩 2 天 (急需跟进)</span>
+                </div>
+                <div class="flex gap-2 pt-1">
+                  <button onclick="openFollowupDrawer('顺丰科技有限公司')" class="flex-1 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-brand-500 hover:text-white text-xs font-medium transition-colors">写跟进</button>
+                  <button onclick="releaseToOpenSea('顺丰科技有限公司')" class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 hover:text-rose-500">退回公海</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Public Open Sea Section -->
+          <div id="cust-section-public" class="hidden space-y-4">
+            <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
+              <span>⚠️ 公海客户池说明：任何人均可自主捡入，每位销售人员最多同时保留 30 家私海客户。捡入后 15 天内无拜访记录将自动重新流回公海。</span>
+              <span class="font-bold">当前私海额度: 28/30</span>
+            </div>
+
+            <div class="bg-white dark:bg-[#121316] rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-zinc-50/80 dark:bg-zinc-900/60 text-zinc-400 font-semibold border-b border-zinc-200 dark:border-zinc-800 uppercase">
+                  <tr>
+                    <th class="py-3 px-4">公海企业名称</th>
+                    <th class="py-3 px-4">所属行业 / 城市</th>
+                    <th class="py-3 px-4">原前任负责人</th>
+                    <th class="py-3 px-4">流回公海原因</th>
+                    <th class="py-3 px-4">在公海停留时间</th>
+                    <th class="py-3 px-4 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                    <td class="py-3.5 px-4 font-bold">苏宁易购集团零售云</td>
+                    <td class="py-3.5 px-4">新零售 / 南京</td>
+                    <td class="py-3.5 px-4">赵峰 (已离职)</td>
+                    <td class="py-3.5 px-4 text-zinc-500">人员离职流转公海</td>
+                    <td class="py-3.5 px-4 font-mono">3 天</td>
+                    <td class="py-3.5 px-4 text-right">
+                      <button onclick="claimCustomer('苏宁易购集团零售云')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs">捡入我的私海</button>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                    <td class="py-3.5 px-4 font-bold">无锡先导智能装备</td>
+                    <td class="py-3.5 px-4">锂电设备 / 无锡</td>
+                    <td class="py-3.5 px-4">林晓峰</td>
+                    <td class="py-3.5 px-4 text-rose-500">超过15天未跟进系统回收</td>
+                    <td class="py-3.5 px-4 font-mono">1 天</td>
+                    <td class="py-3.5 px-4 text-right">
+                      <button onclick="claimCustomer('无锡先导智能装备')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs">捡入我的私海</button>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                    <td class="py-3.5 px-4 font-bold">上海联影医疗科技</td>
+                    <td class="py-3.5 px-4">高端医疗器械 / 上海</td>
+                    <td class="py-3.5 px-4">苏雅洁</td>
+                    <td class="py-3.5 px-4 text-zinc-500">销售主动释放</td>
+                    <td class="py-3.5 px-4 font-mono">5 天</td>
+                    <td class="py-3.5 px-4 text-right">
+                      <button onclick="claimCustomer('上海联影医疗科技')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs">捡入我的私海</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ================= MODULE 4: 商机漏斗看板 (DEALS PIPELINE) ================= -->
+        <div id="module-deals" class="crm-module hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-zinc-900 dark:text-zinc-100">商机阶段漏斗看板 (Pipeline Kanban)</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-blue-950 text-brand-600 text-xs font-semibold">加权总额 ¥6,420,000</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-1">全生命周期商机阶段推进，支持随时拖拽调整与预测核算</p>
+            </div>
+            <button onclick="openModal('modal-new-deal')" class="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-md flex items-center gap-1.5">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>创建商机项目</span>
+            </button>
+          </div>
+
+          <!-- 5-Stage Complete Kanban Board -->
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            
+            <!-- Col 1 -->
+            <div class="bg-zinc-50 dark:bg-zinc-900/60 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    <span class="text-xs font-bold">初步接洽 (15%)</span>
+                  </div>
+                  <span class="text-[10px] font-mono text-zinc-400">¥1.8M</span>
+                </div>
+                <div class="space-y-3">
+                  <div class="bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs">
+                    <div class="text-xs font-bold">海康威视</div>
+                    <div class="text-[11px] text-zinc-400 mt-0.5">视觉AI模型私有化</div>
+                    <div class="mt-2 text-xs font-mono font-bold text-brand-600">¥600,000</div>
+                    <button onclick="moveDealStage(this, '方案呈现')" class="mt-3 w-full py-1 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-brand-500 hover:text-white text-[11px] font-medium transition-colors">推进至方案呈现 →</button>
+                  </div>
+                  <div class="bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs">
+                    <div class="text-xs font-bold">中科曙光</div>
+                    <div class="text-[11px] text-zinc-400 mt-0.5">超算作业调度软件</div>
+                    <div class="mt-2 text-xs font-mono font-bold text-brand-600">¥1,200,000</div>
+                    <button onclick="moveDealStage(this, '方案呈现')" class="mt-3 w-full py-1 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-brand-500 hover:text-white text-[11px] font-medium transition-colors">推进至方案呈现 →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 2 -->
+            <div class="bg-zinc-50 dark:bg-zinc-900/60 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                    <span class="text-xs font-bold">方案呈现 (35%)</span>
+                  </div>
+                  <span class="text-[10px] font-mono text-zinc-400">¥2.65M</span>
+                </div>
+                <div class="space-y-3">
+                  <div class="bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs">
+                    <div class="text-xs font-bold">顺丰科技</div>
+                    <div class="text-[11px] text-zinc-400 mt-0.5">供应链端到端调度</div>
+                    <div class="mt-2 text-xs font-mono font-bold text-indigo-600">¥850,000</div>
+                    <button onclick="moveDealStage(this, '商务谈判')" class="mt-3 w-full py-1 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-indigo-600 hover:text-white text-[11px] font-medium transition-colors">推进至商务谈判 →</button>
+                  </div>
+                  <div class="bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs">
+                    <div class="text-xs font-bold">商汤科技</div>
+                    <div class="text-[11px] text-zinc-400 mt-0.5">多模态基准自动化评测</div>
+                    <div class="mt-2 text-xs font-mono font-bold text-indigo-600">¥500,000</div>
+                    <button onclick="moveDealStage(this, '商务谈判')" class="mt-3 w-full py-1 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-indigo-600 hover:text-white text-[11px] font-medium transition-colors">推进至商务谈判 →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 3 -->
+            <div class="bg-zinc-50 dark:bg-zinc-900/60 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                    <span class="text-xs font-bold">商务谈判 (60%)</span>
+                  </div>
+                  <span class="text-[10px] font-mono text-zinc-400">¥3.9M</span>
+                </div>
+                <div class="space-y-3">
+                  <div class="bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs">
+                    <div class="text-xs font-bold">华泰证券</div>
+                    <div class="text-[11px] text-zinc-400 mt-0.5">量化风控套件二期</div>
+                    <div class="mt-2 text-xs font-mono font-bold text-purple-600">¥1,500,000</div>
+                    <button onclick="moveDealStage(this, '合同审批')" class="mt-3 w-full py-1 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-purple-600 hover:text-white text-[11px] font-medium transition-colors">推进至合同审批 →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 4 -->
+            <div class="bg-zinc-50 dark:bg-zinc-900/60 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <span class="text-xs font-bold">合同审批 (85%)</span>
+                  </div>
+                  <span class="text-[10px] font-mono text-zinc-400">¥2.4M</span>
+                </div>
+                <div class="space-y-3">
+                  <div class="bg-white dark:bg-zinc-800 p-3 rounded-xl border border-amber-300 dark:border-amber-800 shadow-xs">
+                    <div class="text-xs font-bold">大华股份</div>
+                    <div class="text-[11px] text-zinc-400 mt-0.5">视频集群分析授权</div>
+                    <div class="mt-2 text-xs font-mono font-bold text-amber-600">¥2,400,000</div>
+                    <button onclick="moveDealStage(this, '赢单签约')" class="mt-3 w-full py-1 rounded bg-amber-500 text-white hover:bg-amber-600 text-[11px] font-semibold transition-colors">双方盖章赢单！🎉</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 5 -->
+            <div class="bg-zinc-50 dark:bg-zinc-900/60 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span class="text-xs font-bold">赢单签约 (100%)</span>
+                  </div>
+                  <span class="text-[10px] font-mono text-emerald-600 font-bold">¥825,400</span>
+                </div>
+                <div class="space-y-3">
+                  <div class="bg-white dark:bg-zinc-800 p-3 rounded-xl border border-emerald-300 dark:border-emerald-800 shadow-xs">
+                    <div class="text-xs font-bold text-emerald-700 dark:text-emerald-300">理想汽车</div>
+                    <div class="text-[11px] text-zinc-400 mt-0.5">车载语音交互模块</div>
+                    <div class="mt-2 text-xs font-mono font-bold text-emerald-600">¥525,400</div>
+                    <span class="inline-block mt-2 px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 text-[10px] font-semibold">首付款已到账</span>
+                  </div>
+                  <div class="bg-white dark:bg-zinc-800 p-3 rounded-xl border border-emerald-300 dark:border-emerald-800 shadow-xs">
+                    <div class="text-xs font-bold text-emerald-700 dark:text-emerald-300">微盟集团</div>
+                    <div class="text-[11px] text-zinc-400 mt-0.5">数据中台营销扩容</div>
+                    <div class="mt-2 text-xs font-mono font-bold text-emerald-600">¥300,000</div>
+                    <span class="inline-block mt-2 px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 text-[10px] font-semibold">已完成交付验收</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+
+        <!-- ================= MODULE 5: 合同与订单审批 (CONTRACTS & ORDERS) ================= -->
+        <div id="module-contracts" class="crm-module hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-zinc-900 dark:text-zinc-100">合同与订单流转中心 (Contracts & Orders)</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950 text-rose-600 text-xs font-semibold">2 份待我审批</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-1">电子合同签章、非标条款法务审查与多级权签审批流</p>
+            </div>
+            <button onclick="showToast('正在调取企业标准销售合同模板库...')" class="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-xs flex items-center gap-1.5">
+              <i data-lucide="file-plus" class="w-3.5 h-3.5"></i>
+              <span>起草新销售合同</span>
+            </button>
+          </div>
+
+          <div class="bg-white dark:bg-[#121316] rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card overflow-hidden">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-zinc-50/80 dark:bg-zinc-900/60 text-zinc-400 font-semibold border-b border-zinc-200 dark:border-zinc-800 uppercase">
+                <tr>
+                  <th class="py-3.5 px-4">合同编号 / 标题</th>
+                  <th class="py-3.5 px-4">签约客户主体</th>
+                  <th class="py-3.5 px-4">合同总金额</th>
+                  <th class="py-3.5 px-4">审批链节点状态</th>
+                  <th class="py-3.5 px-4">申请人 / 时间</th>
+                  <th class="py-3.5 px-4 text-right">审核操作</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                  <td class="py-3.5 px-4">
+                    <div class="font-bold text-zinc-900 dark:text-zinc-100">HT-2026-09028</div>
+                    <div class="text-[10px] text-zinc-400">大华股份智慧安防算法授权年度合同</div>
+                  </td>
+                  <td class="py-3.5 px-4 font-medium">浙江大华技术股份有限公司</td>
+                  <td class="py-3.5 px-4 font-mono font-bold text-brand-600 text-sm">¥2,400,000</td>
+                  <td class="py-3.5 px-4">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-semibold text-[11px] border border-amber-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                      待销售总监审批 (陈明)
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4 text-zinc-400">李晓鹏 · 09-28 09:30</td>
+                  <td class="py-3.5 px-4 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="approveContract('HT-2026-09028', this)" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs">批准签署</button>
+                      <button onclick="showToast('已退回修改，附言：请补充附录二交付节点 SLA')" class="px-2 py-1 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 text-xs text-zinc-600 dark:text-zinc-300">退回</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                  <td class="py-3.5 px-4">
+                    <div class="font-bold text-zinc-900 dark:text-zinc-100">HT-2026-09015</div>
+                    <div class="text-[10px] text-zinc-400">华泰证券二期智能风控系统服务协议</div>
+                  </td>
+                  <td class="py-3.5 px-4 font-medium">华泰证券股份有限公司</td>
+                  <td class="py-3.5 px-4 font-mono font-bold text-brand-600 text-sm">¥1,500,000</td>
+                  <td class="py-3.5 px-4">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold text-[11px]">
+                      法务审核已通过 · 待客户用印
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4 text-zinc-400">陈明 · 09-27 15:40</td>
+                  <td class="py-3.5 px-4 text-right">
+                    <button onclick="showToast('已向客户法务发送契约锁电子签催办提醒')" class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 text-xs">催促用印</button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                  <td class="py-3.5 px-4">
+                    <div class="font-bold text-zinc-900 dark:text-zinc-100">HT-2026-08892</div>
+                    <div class="text-[10px] text-zinc-400">理想汽车智能座舱定制开发合同</div>
+                  </td>
+                  <td class="py-3.5 px-4 font-medium">北京车和家信息技术有限公司</td>
+                  <td class="py-3.5 px-4 font-mono font-bold text-emerald-600 text-sm">¥525,400</td>
+                  <td class="py-3.5 px-4">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold text-[11px]">
+                      双方法人电子签已生效 ✅
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4 text-zinc-400">陈明 · 09-20 11:20</td>
+                  <td class="py-3.5 px-4 text-right">
+                    <button onclick="showToast('正在下载已加盖双方电子印章的合同 PDF 归档件...')" class="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 text-zinc-600 dark:text-zinc-300 text-xs">下载PDF</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+
+        <!-- ================= MODULE 6: 回款与发票 (PAYMENTS & INVOICES) ================= -->
+        <div id="module-payments" class="crm-module hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-zinc-900 dark:text-zinc-100">回款与发票税务中心 (Payments & Invoicing)</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 text-xs font-semibold">当月到账 ¥82.5万</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-1">资金回笼监控、账期逾期催收预警与增值税发票核销闭环</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="showToast('打开快速录入回款单弹窗...')" class="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-xs flex items-center gap-1.5">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>认领银行流水</span>
+              </button>
+              <button onclick="showToast('申请开具增值税专用发票...')" class="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 text-xs font-medium">
+                开具发票
+              </button>
+            </div>
+          </div>
+
+          <!-- Payment Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-[#121316] p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="text-xs text-zinc-400">本月已确认到账</div>
+              <div class="text-2xl font-mono font-bold mt-1 text-emerald-600">¥825,400</div>
+              <div class="text-[11px] text-zinc-400 mt-1">达成月度回款 82.5%</div>
+            </div>
+            <div class="bg-white dark:bg-[#121316] p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="text-xs text-zinc-400">本周待回款项</div>
+              <div class="text-2xl font-mono font-bold mt-1 text-blue-600">¥380,000</div>
+              <div class="text-[11px] text-zinc-400 mt-1">涉及 2 家签约企业</div>
+            </div>
+            <div class="bg-white dark:bg-[#121316] p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="text-xs text-zinc-400">逾期应收账款</div>
+              <div class="text-2xl font-mono font-bold mt-1 text-rose-500">¥65,000</div>
+              <div class="text-[11px] text-rose-500 mt-1">逾期超 15 天已催缴</div>
+            </div>
+            <div class="bg-white dark:bg-[#121316] p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              <div class="text-xs text-zinc-400">已开票待核销</div>
+              <div class="text-2xl font-mono font-bold mt-1 text-amber-500">¥210,000</div>
+              <div class="text-[11px] text-zinc-400 mt-1">数电专票 3 笔</div>
+            </div>
+          </div>
+
+          <!-- Payment Records Table -->
+          <div class="bg-white dark:bg-[#121316] rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-zinc-50/80 dark:bg-zinc-900/60 text-zinc-400 font-semibold border-b border-zinc-200 dark:border-zinc-800 uppercase">
+                <tr>
+                  <th class="py-3 px-4">回款款项说明</th>
+                  <th class="py-3 px-4">签约客户</th>
+                  <th class="py-3 px-4">期数 / 比例</th>
+                  <th class="py-3 px-4">回款金额</th>
+                  <th class="py-3 px-4">计划到账日</th>
+                  <th class="py-3 px-4">当前状态</th>
+                  <th class="py-3 px-4 text-right">操作</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                  <td class="py-3.5 px-4 font-bold">理想汽车车载语音模块 首期款</td>
+                  <td class="py-3.5 px-4">北京车和家信息技术有限公司</td>
+                  <td class="py-3.5 px-4">第 1 期 (50%)</td>
+                  <td class="py-3.5 px-4 font-mono font-bold text-emerald-600">¥262,700</td>
+                  <td class="py-3.5 px-4 font-mono">09-25 (已到账)</td>
+                  <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 font-semibold text-[11px]">银行电汇已入账</span></td>
+                  <td class="py-3.5 px-4 text-right">
+                    <button onclick="showToast('正在调取招商银行电汇电子回单...')" class="px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300">查回收据</button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                  <td class="py-3.5 px-4 font-bold">微盟营销中台扩容款 全额款</td>
+                  <td class="py-3.5 px-4">上海微盟企业有限公司</td>
+                  <td class="py-3.5 px-4">一次性 (100%)</td>
+                  <td class="py-3.5 px-4 font-mono font-bold text-emerald-600">¥300,000</td>
+                  <td class="py-3.5 px-4 font-mono">09-22 (已到账)</td>
+                  <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 font-semibold text-[11px]">银行电汇已入账</span></td>
+                  <td class="py-3.5 px-4 text-right">
+                    <button onclick="showToast('正在调取银行电汇凭证...')" class="px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300">查回收据</button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40">
+                  <td class="py-3.5 px-4 font-bold">苏州汇川技术自动化授权 首款</td>
+                  <td class="py-3.5 px-4">汇川技术股份有限公司</td>
+                  <td class="py-3.5 px-4">第 1 期 (40%)</td>
+                  <td class="py-3.5 px-4 font-mono font-bold text-amber-600">¥262,700</td>
+                  <td class="py-3.5 px-4 font-mono text-rose-500 font-semibold">09-30 (剩 2 天)</td>
+                  <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 font-semibold text-[11px]">财务已请款</span></td>
+                  <td class="py-3.5 px-4 text-right">
+                    <button onclick="showToast('已向汇川技术财务处推送催款跟进函')" class="px-2.5 py-1 rounded bg-amber-500 text-white font-medium hover:bg-amber-600">发送催缴短信</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+
+        <!-- ================= MODULE 7: 产品与报价 CPQ (CONFIGURE, PRICE, QUOTE) ================= -->
+        <div id="module-products" class="crm-module hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-zinc-900 dark:text-zinc-100">产品目录与 CPQ 报价配置器</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950 text-purple-600 text-xs font-semibold">实时精准算价</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-1">支持席位阶梯折扣、算力插件配额与原厂技术支持 SLA 组合输出标准化正式报价单</p>
+            </div>
+            <button onclick="generateFormalQuote()" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs shadow-md flex items-center gap-1.5">
+              <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+              <span>生成正式商业报价单 PDF</span>
+            </button>
+          </div>
+
+          <!-- Product Catalog & Interactive Calculator -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Standard Catalog (6 cols) -->
+            <div class="lg:col-span-6 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
+              <h3 class="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <i data-lucide="box" class="w-4 h-4 text-brand-500"></i>
+                企业标准产品价目表
+              </h3>
+              
+              <div class="space-y-3">
+                <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                  <div>
+                    <div class="font-bold text-xs text-zinc-900 dark:text-zinc-100">领航 CRM 企业旗舰版 (席位)</div>
+                    <div class="text-[11px] text-zinc-400">包含全模块销售自动化、公海流转与 BI</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-mono font-bold text-sm text-brand-600">¥1,200</div>
+                    <div class="text-[10px] text-zinc-400">/账号/年</div>
+                  </div>
+                </div>
+
+                <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                  <div>
+                    <div class="font-bold text-xs text-zinc-900 dark:text-zinc-100">AI 销售 Copilot 智能套件</div>
+                    <div class="text-[11px] text-zinc-400">大模型赋能话术生成、商机诊断、自动纪要</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-mono font-bold text-sm text-purple-600">¥18,000</div>
+                    <div class="text-[10px] text-zinc-400">/企业企业包/年</div>
+                  </div>
+                </div>
+
+                <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                  <div>
+                    <div class="font-bold text-xs text-zinc-900 dark:text-zinc-100">私有化本地集群交付组件</div>
+                    <div class="text-[11px] text-zinc-400">支持信创环境、国产服务器 GPU 私有部署</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-mono font-bold text-sm text-zinc-900 dark:text-zinc-100">¥280,000</div>
+                    <div class="text-[10px] text-zinc-400">/套 (买断)</div>
+                  </div>
+                </div>
+
+                <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                  <div>
+                    <div class="font-bold text-xs text-zinc-900 dark:text-zinc-100">7×24 驻场交付保障 SLA</div>
+                    <div class="text-[11px] text-zinc-400">专属客户成功架构师 1 对 1 保障</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-mono font-bold text-sm text-zinc-900 dark:text-zinc-100">¥80,000</div>
+                    <div class="text-[10px] text-zinc-400">/年</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CPQ Interactive Calculator (6 cols) -->
+            <div class="lg:col-span-6 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
+              <h3 class="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <i data-lucide="calculator" class="w-4 h-4 text-purple-500"></i>
+                CPQ 动态报价试算器
+              </h3>
+
+              <div class="space-y-3.5 text-xs">
+                <div>
+                  <label class="block font-semibold mb-1">销售坐席数量 (Seats)</label>
+                  <div class="flex items-center gap-3">
+                    <input type="range" id="cpq-seats" min="10" max="500" value="80" oninput="calculateCpq()" class="flex-1 accent-brand-500">
+                    <span id="cpq-seats-label" class="font-mono font-bold text-sm text-brand-600 w-16 text-right">80 席</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block font-semibold mb-1">增值组件选配</label>
+                  <div class="space-y-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="cpq-ai" checked onchange="calculateCpq()" class="w-4 h-4 text-purple-600 rounded">
+                      <span>包含 AI 销售 Copilot 企业大包 (+¥18,000/年)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="cpq-private" onchange="calculateCpq()" class="w-4 h-4 text-purple-600 rounded">
+                      <span>私有化本地集群部署套件 (+¥280,000)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="cpq-sla" checked onchange="calculateCpq()" class="w-4 h-4 text-purple-600 rounded">
+                      <span>7×24 驻场交付保障 SLA (+¥80,000/年)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block font-semibold mb-1">商业折扣授权比例</label>
+                  <select id="cpq-discount" onchange="calculateCpq()" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs">
+                    <option value="1.0">原价 (100% 无折扣)</option>
+                    <option value="0.9">大客户基础折扣 (90折 · 销售经理权签)</option>
+                    <option value="0.85" selected>重点战略大客户折扣 (85折 · 销售总监权签)</option>
+                    <option value="0.75">年度特批破局底价 (75折 · 需战区副总审批)</option>
+                  </select>
+                </div>
+
+                <!-- Price Result Box -->
+                <div class="mt-4 p-4 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60">
+                  <div class="flex justify-between items-center text-xs text-purple-800 dark:text-purple-300">
+                    <span>标准市场总价:</span>
+                    <span id="cpq-orig-price" class="font-mono line-through text-zinc-400">¥194,000</span>
+                  </div>
+                  <div class="flex justify-between items-center text-xs text-purple-800 dark:text-purple-300 mt-1">
+                    <span>折扣减免优惠:</span>
+                    <span id="cpq-discount-amount" class="font-mono text-rose-500 font-semibold">-¥29,100</span>
+                  </div>
+                  <div class="flex justify-between items-center mt-3 pt-3 border-t border-purple-200 dark:border-purple-800">
+                    <span class="font-bold text-sm text-purple-900 dark:text-purple-100">最终成交报价 (净价):</span>
+                    <span id="cpq-final-price" class="text-xl font-mono font-extrabold text-purple-600 dark:text-purple-400">¥164,900</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+
+        <!-- ================= MODULE 8: 战区业绩排行榜 (LEADERBOARD) ================= -->
+        <div id="module-leaderboard" class="crm-module hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-zinc-900 dark:text-zinc-100">全国各大战区销售排行榜 (National Leaderboard)</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950 text-amber-600 text-xs font-semibold">奖金池 ¥50,000 瓜分中</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-1">军令状进度追踪、各大战区红蓝军 PK 与个人龙虎榜</p>
+            </div>
+            <span class="text-xs font-mono text-zinc-400">数据每 15 分钟实时刷新</span>
+          </div>
+
+          <!-- Warzone PK Bars -->
+          <div class="bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
+            <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <i data-lucide="swords" class="w-4 h-4 text-rose-500"></i>
+              四大战区月度业绩 PK 军令状
+            </h3>
+
+            <div class="space-y-4 text-xs">
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <span class="font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 华东战区 (陈明 所属) 🥇
+                  </span>
+                  <span class="font-mono font-bold text-emerald-600">¥3,850,000 / 400万 (96.2%)</span>
+                </div>
+                <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-2.5 rounded-full overflow-hidden">
+                  <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full" style="width: 96.2%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <span class="font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> 华南战区 🥈
+                  </span>
+                  <span class="font-mono font-bold text-blue-600">¥3,420,000 / 380万 (90.0%)</span>
+                </div>
+                <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-2.5 rounded-full overflow-hidden">
+                  <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-2.5 rounded-full" style="width: 90.0%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <span class="font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-purple-500"></span> 华北战区 🥉
+                  </span>
+                  <span class="font-mono font-bold text-purple-600">¥2,980,000 / 350万 (85.1%)</span>
+                </div>
+                <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-2.5 rounded-full overflow-hidden">
+                  <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2.5 rounded-full" style="width: 85.1%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <span class="font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span> 西部战区
+                  </span>
+                  <span class="font-mono font-bold text-amber-600">¥1,850,000 / 220万 (84.1%)</span>
+                </div>
+                <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-2.5 rounded-full overflow-hidden">
+                  <div class="bg-gradient-to-r from-amber-500 to-yellow-400 h-2.5 rounded-full" style="width: 84.1%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sales Heroes Top 5 -->
+          <div class="bg-white dark:bg-[#121316] rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+            <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 font-bold text-sm">个人销售龙虎榜 Top 5</div>
+            <table class="w-full text-left text-xs">
+              <thead class="bg-zinc-50/80 dark:bg-zinc-900/60 text-zinc-400 uppercase font-semibold border-b border-zinc-200 dark:border-zinc-800">
+                <tr>
+                  <th class="py-3 px-4 w-12 text-center">排名</th>
+                  <th class="py-3 px-4">销售精英</th>
+                  <th class="py-3 px-4">归属战区</th>
+                  <th class="py-3 px-4">本月完成签约额</th>
+                  <th class="py-3 px-4">达成率</th>
+                  <th class="py-3 px-4">本月代表作大单</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <tr class="bg-amber-50/30 dark:bg-amber-950/20">
+                  <td class="py-3 px-4 text-center font-bold text-amber-500 text-sm">🥇 1</td>
+                  <td class="py-3 px-4 font-bold text-zinc-900 dark:text-zinc-100">陈明 (您)</td>
+                  <td class="py-3 px-4">华东战区</td>
+                  <td class="py-3 px-4 font-mono font-bold text-amber-600 text-sm">¥825,400</td>
+                  <td class="py-3 px-4 font-semibold text-emerald-600">82.5%</td>
+                  <td class="py-3 px-4 text-zinc-500">理想汽车车载语音模组</td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-4 text-center font-bold text-zinc-400 text-sm">🥈 2</td>
+                  <td class="py-3 px-4 font-bold text-zinc-900 dark:text-zinc-100">林晓峰</td>
+                  <td class="py-3 px-4">华南战区</td>
+                  <td class="py-3 px-4 font-mono font-bold text-zinc-700 dark:text-zinc-300">¥680,000</td>
+                  <td class="py-3 px-4 font-semibold text-zinc-500">68.0%</td>
+                  <td class="py-3 px-4 text-zinc-500">比亚迪电池溯源套件</td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-4 text-center font-bold text-amber-700 text-sm">🥉 3</td>
+                  <td class="py-3 px-4 font-bold text-zinc-900 dark:text-zinc-100">苏雅洁</td>
+                  <td class="py-3 px-4">华北战区</td>
+                  <td class="py-3 px-4 font-mono font-bold text-zinc-700 dark:text-zinc-300">¥550,000</td>
+                  <td class="py-3 px-4 font-semibold text-zinc-500">55.0%</td>
+                  <td class="py-3 px-4 text-zinc-500">中信建投大数据中台</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+
+        <!-- ================= MODULE 9: 销售 BI 报表 (ANALYTICS & BI) ================= -->
+        <div id="module-analytics" class="crm-module hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-zinc-900 dark:text-zinc-100">销售 BI 智能报表与客群洞察</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-brand-600 text-xs font-semibold">多维商业智能透视</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-1">成单转化耗时、客群行业分布、丢单根因归因与客单价深度剖析</p>
+            </div>
+            <button onclick="showToast('正在导出本季度全维度 BI 深度分析报告 PDF...')" class="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-xs flex items-center gap-1.5">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+              <span>导出 BI 报表</span>
+            </button>
+          </div>
+
+          <!-- BI Charts -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Industry Distribution (6 cols) -->
+            <div class="lg:col-span-6 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                  <i data-lucide="pie-chart" class="w-4 h-4 text-purple-500"></i>
+                  商机合同金额行业分布
+                </h3>
+                <span class="text-xs font-mono text-zinc-400">总计 ¥12.8M</span>
+              </div>
+              <div class="h-64 flex items-center justify-center">
+                <canvas id="bi-industry-chart"></canvas>
+              </div>
+            </div>
+
+            <!-- Conversion Cycle Time (6 cols) -->
+            <div class="lg:col-span-6 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                  <i data-lucide="clock" class="w-4 h-4 text-emerald-500"></i>
+                  各阶段平均流转耗时 (天)
+                </h3>
+                <span class="text-xs font-mono text-emerald-500">平均成单周期: 28 天</span>
+              </div>
+              <div class="h-64">
+                <canvas id="bi-cycle-chart"></canvas>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Lost Deal Reason Analysis -->
+          <div class="bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
+            <h3 class="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>
+              历史丢单归因复盘分析 (Lost Deal Reasons)
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+              <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700">
+                <div class="text-zinc-500">采购预算不足 / 冻结</div>
+                <div class="text-lg font-bold text-zinc-800 dark:text-zinc-200 mt-1">35%</div>
+                <div class="text-[10px] text-zinc-400 mt-1">建议: 推出按季度或分阶段轻量订阅包</div>
+              </div>
+              <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700">
+                <div class="text-zinc-500">友商低价恶性竞争</div>
+                <div class="text-lg font-bold text-zinc-800 dark:text-zinc-200 mt-1">28%</div>
+                <div class="text-[10px] text-zinc-400 mt-1">建议: 强化私有化安全与原厂 SLA 门槛</div>
+              </div>
+              <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700">
+                <div class="text-zinc-500">功能与技术参数不符</div>
+                <div class="text-lg font-bold text-zinc-800 dark:text-zinc-200 mt-1">22%</div>
+                <div class="text-[10px] text-zinc-400 mt-1">建议: 售前早期介入深度 POC 验证</div>
+              </div>
+              <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700">
+                <div class="text-zinc-500">决策链变动搁置</div>
+                <div class="text-lg font-bold text-zinc-800 dark:text-zinc-200 mt-1">15%</div>
+                <div class="text-[10px] text-zinc-400 mt-1">建议: 覆盖多部门 CTO 与业务副总裁</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ================= MODULE 10: AI 销售赋能助手 (AI COPILOT WORKSPACE) ================= -->
+        <div id="module-ai-copilot" class="crm-module hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-purple-900/30 to-indigo-900/20 p-6 rounded-2xl border border-purple-500/30 glow-card">
+            <div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-purple-500 text-white flex items-center justify-center shadow-lg shadow-purple-500/30">
+                  <i data-lucide="bot" class="w-4 h-4"></i>
+                </div>
+                <h2 class="text-xl font-bold text-zinc-900 dark:text-zinc-100">领航 AI 销售 Copilot 智能工作台</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-semibold border border-purple-500/20">大模型赋能</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-1">潜客全景背调透视、客户拜访速记智能萃取 CRM 字段与大客户谈判话术推演</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Copilot Prompting (7 cols) -->
+            <div class="lg:col-span-7 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
+              <h3 class="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <i data-lucide="sparkles" class="w-4 h-4 text-purple-500"></i>
+                智能销售指令助手
+              </h3>
+
+              <div class="grid grid-cols-3 gap-2">
+                <button onclick="runAiCopilotPrompt('meeting')" class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700/80 hover:border-purple-500 text-left transition-colors">
+                  <div class="font-bold text-xs">📝 拜访纪要萃取</div>
+                  <div class="text-[10px] text-zinc-400 mt-1">录音文本提取商机要素</div>
+                </button>
+                <button onclick="runAiCopilotPrompt('pitch')" class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700/80 hover:border-purple-500 text-left transition-colors">
+                  <div class="font-bold text-xs">🎯 竞对防守话术</div>
+                  <div class="text-[10px] text-zinc-400 mt-1">破解客户压价与竞品对比</div>
+                </button>
+                <button onclick="runAiCopilotPrompt('research')" class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700/80 hover:border-purple-500 text-left transition-colors">
+                  <div class="font-bold text-xs">🏢 潜客 360° 背调</div>
+                  <div class="text-[10px] text-zinc-400 mt-1">检索企业招投标与决策人</div>
+                </button>
+              </div>
+
+              <!-- Interactive Input -->
+              <div class="space-y-2">
+                <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">输入您的销售指令或粘贴沟通记录：</label>
+                <textarea id="ai-workbench-input" rows="4" placeholder="例如：今天与顺丰科技林总开会，对方表示预算约80万，希望能两周内上线，重点担心系统峰值并发延迟..." class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                <div class="flex justify-end">
+                  <button onclick="executeAiCopilot()" class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs shadow-md shadow-purple-600/25 flex items-center gap-1.5">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>立即让 AI 深度解析</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right AI Response Terminal (5 cols) -->
+            <div class="lg:col-span-5 bg-zinc-900 text-zinc-100 p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-zinc-800">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-xs font-mono font-bold text-zinc-300">AI 输出结果</span>
+                  </div>
+                  <button onclick="copyAiWorkbenchResult()" class="text-[11px] text-purple-400 hover:underline">复制结果</button>
+                </div>
+                <div id="ai-workbench-result" class="font-mono text-xs leading-relaxed text-zinc-300 whitespace-pre-wrap">
+【领航 AI 已就绪】
+请在左侧选择快捷指令，或输入任何大客户跟进情况。
+AI 将为您即刻生成：
+1. 规范化 CRM 商机跟进纪要
+2. 赢单概率评估与风险诊断
+3. 下一步精准触达策略与沟通邮件草稿
+                </div>
+              </div>
+              <div class="mt-4 pt-3 border-t border-zinc-800 text-[10px] text-zinc-500 flex justify-between">
+                <span>模型引擎: Navigator CRM LLM 2.5</span>
+                <span>响应延迟: ~180ms</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+  </div>
+
+
+  <!-- ================= MODALS & DRAWERS ================= -->
+
+  <!-- Modal: 新建商机 -->
+  <div id="modal-new-deal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl max-w-lg w-full border border-zinc-200 dark:border-zinc-800 shadow-2xl p-6">
+      <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
+        <h3 class="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+          <i data-lucide="badge-plus" class="w-4 h-4 text-brand-500"></i>
+          录入新商机
+        </h3>
+        <button onclick="closeModal('modal-new-deal')" class="text-zinc-400 hover:text-zinc-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleCreateDeal(event)" class="mt-4 space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold mb-1">商机名称 *</label>
+          <input type="text" id="new-deal-title" required placeholder="如: 百度智能云 2026 年度视觉集群采购" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">客户企业 *</label>
+            <input type="text" id="new-deal-company" required placeholder="百度在线网络技术" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">预估合同金额 (¥) *</label>
+            <input type="number" id="new-deal-amount" required placeholder="1200000" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 font-mono">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">所属初始阶段</label>
+            <select id="new-deal-stage" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+              <option value="初步接洽">初步接洽 (需求调研)</option>
+              <option value="方案呈现">方案呈现 (技术验证)</option>
+              <option value="商务谈判">商务谈判 (标书报价)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">预计签约日期</label>
+            <input type="date" id="new-deal-date" value="2026-10-31" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+          </div>
+        </div>
+        <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-new-deal')" class="px-4 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700">取消</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold">立即创建</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: 录入线索 -->
+  <div id="modal-new-lead" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full border border-zinc-200 dark:border-zinc-800 shadow-2xl p-6">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+        <h3 class="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+          <i data-lucide="user-plus" class="w-4 h-4 text-brand-500"></i>
+          录入销售线索
+        </h3>
+        <button onclick="closeModal('modal-new-lead')" class="text-zinc-400 hover:text-zinc-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleCreateLead(event)" class="mt-4 space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold mb-1">企业/客户全称 *</label>
+          <input type="text" id="lead-company" required placeholder="如: 哔哩哔哩科技有限公司" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold mb-1">联系人姓名</label>
+            <input type="text" id="lead-name" placeholder="张经理" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">联系电话/手机</label>
+            <input type="tel" id="lead-phone" placeholder="138 0000 0000" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">线索来源</label>
+          <select id="lead-source" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+            <option>市场活动 / 峰会展台</option>
+            <option>官网自主咨询表单</option>
+            <option>老客户转介绍</option>
+            <option>外部渠道与代理商</option>
+          </select>
+        </div>
+        <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-new-lead')" class="px-4 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700">取消</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold">保存入库</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Drawer: 写跟进记录 -->
+  <div id="drawer-followup" class="fixed inset-y-0 right-0 w-96 bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between">
+    <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-800/40">
+      <div class="flex items-center gap-2">
+        <i data-lucide="edit-3" class="w-4 h-4 text-brand-500"></i>
+        <div>
+          <div class="text-xs font-bold text-zinc-900 dark:text-zinc-100">新增客户跟进记录</div>
+          <div id="followup-target-company" class="text-[10px] text-zinc-400">大华技术股份有限公司</div>
+        </div>
+      </div>
+      <button onclick="closeFollowupDrawer()" class="text-zinc-400 hover:text-zinc-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+
+    <form onsubmit="handleSaveFollowup(event)" class="p-4 flex-1 overflow-y-auto space-y-4 text-xs">
+      <div>
+        <label class="block font-semibold mb-1">跟进方式</label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="flex items-center justify-center p-2 rounded-xl border border-brand-500 bg-brand-50 dark:bg-blue-950 text-brand-600 font-medium cursor-pointer">
+            <input type="radio" name="follow-type" value="线下拜访" checked class="hidden">
+            <span>线下拜访</span>
+          </label>
+          <label class="flex items-center justify-center p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 cursor-pointer">
+            <input type="radio" name="follow-type" value="电话沟通" class="hidden">
+            <span>电话沟通</span>
+          </label>
+          <label class="flex items-center justify-center p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 cursor-pointer">
+            <input type="radio" name="follow-type" value="线上会议" class="hidden">
+            <span>腾讯会议</span>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-1">跟进沟通纪要 *</label>
+        <textarea id="followup-content" required rows="4" placeholder="记录本次与客户沟通的核心要点、达成共识与风险点..." class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs focus:ring-1 focus:ring-brand-500"></textarea>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-1">下次跟进计划时间</label>
+        <input type="datetime-local" id="followup-next-time" value="2026-09-30T10:00" class="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs">
+      </div>
+
+      <button type="submit" class="w-full py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-md transition-all">
+        保存并更新客户档案
+      </button>
+    </form>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Main CRM Application Logic Script -->
+  <script src="./js/crm.js"></script>
+
+</body>
+</html>
