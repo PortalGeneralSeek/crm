@@ -9,6 +9,7 @@ import { moduleTitles } from './data/moduleTitles';
 import { ToastProvider, useToast } from './hooks/useToast';
 import { useTheme } from './hooks/useTheme';
 import { useHashRoute } from '../shared/useHashRoute';
+import { useAuth, authStore } from './services/crmApi';
 
 // Lazy load modules for optimal initial bundle & performance
 const LoginView = lazy(() => import('./components/LoginView'));
@@ -41,12 +42,14 @@ function ModuleSkeleton() {
 function Workspace() {
   const showToast = useToast();
   const { isDark, toggleTheme } = useTheme();
-  const { path, navigate } = useHashRoute('/dashboard');
+  const auth = useAuth();
+  const { path, navigate } = useHashRoute('/login');
 
   const mainRef = useRef(null);
   const dashboardRef = useRef(null);
 
-  const view = path === '/login' ? 'login' : 'workbench';
+  // If user is not logged in, enforce view = 'login'
+  const view = !auth.isLoggedIn || path === '/login' ? 'login' : 'workbench';
   const rawModule = path === '/login' ? 'dashboard' : path.replace(/^\//, '');
   const activeModule = moduleTitles[rawModule] ? rawModule : 'dashboard';
 
@@ -59,11 +62,53 @@ function Workspace() {
   const [followupOpen, setFollowupOpen] = useState(false);
   const [followupCompany, setFollowupCompany] = useState('大华技术股份有限公司');
 
-  const switchView = (viewName) => {
-    navigate(viewName === 'login' ? '/login' : '/dashboard');
-    if (viewName === 'workbench') {
-      setTimeout(() => dashboardRef.current?.resizeChart(), 100);
+  // Mobile drawer state
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Desktop sidebar collapsed state (persisted)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('acme_crm_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
     }
+  });
+
+  const handleToggleCollapse = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('acme_crm_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  // Auth route guard: enforce login by default
+  useEffect(() => {
+    if (!auth.isLoggedIn && path !== '/login') {
+      navigate('/login');
+    }
+  }, [auth.isLoggedIn, path, navigate]);
+
+  const switchView = (viewName) => {
+    if (viewName === 'workbench') {
+      if (!auth.isLoggedIn) {
+        showToast('请先登录系统认证身份', 'warning');
+        navigate('/login');
+        return;
+      }
+      navigate('/dashboard');
+      setTimeout(() => dashboardRef.current?.resizeChart(), 100);
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const handleLogout = () => {
+    authStore.logout();
+    navigate('/login');
+    showToast('您已成功退出工作台');
   };
 
   const switchModule = (moduleKey) => {
@@ -115,10 +160,14 @@ function Workspace() {
         isDark={isDark}
         onSwitchView={switchView}
         onToggleTheme={handleToggleTheme}
+        isLoggedIn={auth.isLoggedIn}
       />
 
       <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-[#09090b]" />}>
-        <LoginView hidden={view !== 'login'} onEnterWorkbench={() => switchView('workbench')} />
+        <LoginView
+          hidden={view !== 'login'}
+          onEnterWorkbench={() => switchView('workbench')}
+        />
       </Suspense>
 
       <div
@@ -132,11 +181,11 @@ function Workspace() {
           onNewDeal={() => setDealModalOpen(true)}
           onNewLead={() => setLeadModalOpen(true)}
           onOpenAiCopilot={() => switchModule('ai-copilot')}
-          onLogout={() => {
-            switchView('login');
-            showToast('您已成功退出工作台');
-          }}
+          onLogout={handleLogout}
           onSwitchModule={switchModule}
+          onToggleMobileSidebar={() => setMobileSidebarOpen((o) => !o)}
+          isSidebarCollapsed={sidebarCollapsed}
+          onToggleCollapse={handleToggleCollapse}
         />
 
         <div className="flex-1 flex overflow-hidden">
@@ -144,12 +193,16 @@ function Workspace() {
             activeModule={activeModule}
             hasNavigated={navigationCount > 0}
             onSwitchModule={switchModule}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={handleToggleCollapse}
+            mobileOpen={mobileSidebarOpen}
+            onCloseMobile={() => setMobileSidebarOpen(false)}
           />
 
           <main
             id="main-content-viewport"
             ref={mainRef}
-            className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 space-y-6"
+            className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-6 lg:p-8 space-y-6"
           >
             <Suspense fallback={<ModuleSkeleton />}>
               {isActive('dashboard') && (

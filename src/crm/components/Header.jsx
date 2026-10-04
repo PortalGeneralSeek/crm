@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Icon from '../../shared/Icon';
 import { useToast } from '../hooks/useToast';
 import { useCrmStore } from '../store/crmStore';
+import { useAuth } from '../services/crmApi';
 
 export default function Header({
   title,
@@ -12,8 +13,12 @@ export default function Header({
   onOpenAiCopilot,
   onLogout,
   onSwitchModule,
+  onToggleMobileSidebar,
+  isSidebarCollapsed,
+  onToggleCollapse,
 }) {
   const showToast = useToast();
+  const auth = useAuth();
   const { leads, deals, customers } = useCrmStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
@@ -68,10 +73,30 @@ export default function Header({
 
   return (
     <header className="h-16 flex-none bg-white dark:bg-[#121316] border-b border-zinc-200 dark:border-zinc-800 z-30 px-4 lg:px-6 flex items-center justify-between">
-      {/* Brand & Breadcrumb */}
-      <div className="flex items-center gap-6">
+      {/* Brand & Breadcrumb & Mobile Drawer Trigger */}
+      <div className="flex items-center gap-3 sm:gap-6">
+        {/* Mobile Hamburger Button */}
+        <button
+          type="button"
+          onClick={onToggleMobileSidebar}
+          className="lg:hidden p-2 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors -ml-1.5"
+          aria-label="展开导航菜单"
+        >
+          <Icon name="menu" className="w-5 h-5" />
+        </button>
+
+        {/* Desktop Sidebar Collapse / Expand Button */}
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="hidden lg:flex p-1.5 rounded-xl text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          title={isSidebarCollapsed ? '展开侧边导航 (Expand)' : '收起侧边导航 (Collapse)'}
+        >
+          <Icon name={isSidebarCollapsed ? 'panel-left-open' : 'panel-left-close'} className="w-4 h-4" />
+        </button>
+
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 shrink-0">
             <Icon name="compass" className="w-5 h-5" />
           </div>
           <div>
@@ -79,13 +104,13 @@ export default function Header({
               <span className="font-bold text-base tracking-tight text-zinc-900 dark:text-zinc-100">
                 领航 CRM
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-blue-400 font-semibold border border-brand-500/20">
+              <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-blue-400 font-semibold border border-brand-500/20">
                 华东战区
               </span>
             </div>
             <span
               id="current-module-title"
-              className="text-[11px] text-zinc-400 font-medium block -mt-0.5"
+              className="text-[11px] text-zinc-400 font-medium block -mt-0.5 truncate max-w-[120px] sm:max-w-none"
             >
               {title}
             </span>
@@ -270,22 +295,27 @@ export default function Header({
         <div className="flex items-center gap-2.5 pl-2 border-l border-zinc-200 dark:border-zinc-800">
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80"
+              src={
+                auth.user?.avatar ||
+                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80'
+              }
               alt="Avatar"
               className="w-8 h-8 rounded-full object-cover ring-2 ring-brand-500/20"
-            />{' '}
+            />
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
           </div>
-          <div className="hidden xl:block text-left">
-            <div className="text-xs font-bold leading-none text-zinc-900 dark:text-zinc-100">
-              陈明
+          <div className="hidden sm:block text-left">
+            <div className="text-xs font-bold leading-none text-zinc-900 dark:text-zinc-100 truncate max-w-[100px]">
+              {auth.user?.realName || '未登录'}
             </div>
-            <div className="text-[10px] text-zinc-400 mt-0.5">华东大区 · 销售总监</div>
+            <div className="text-[10px] text-zinc-400 mt-0.5 truncate max-w-[120px]">
+              {auth.role?.name || '体验账号'}
+            </div>
           </div>
           <button
             onClick={onLogout}
-            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1"
-            title="退出到登录页"
+            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title="退出登录"
           >
             <Icon name="log-out" className="w-4 h-4" />
           </button>
