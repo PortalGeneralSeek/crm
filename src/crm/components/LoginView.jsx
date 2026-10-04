@@ -1,26 +1,55 @@
 import { useState } from 'react';
 import Icon from '../../shared/Icon';
 import { useToast } from '../hooks/useToast';
+import { crmApi } from '../services/crmApi';
 
 const ACTIVE_TAB =
   'pb-3 border-b-2 border-brand-500 font-semibold text-brand-600 dark:text-blue-400 transition-colors';
 const INACTIVE_TAB =
   'pb-3 border-b-2 border-transparent font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors';
 
+const DEMO_ACCOUNTS = [
+  { key: 'admin', label: '超级管理员 (Sarah)', pwd: 'admin123', color: 'bg-purple-500/10 text-purple-600 border-purple-500/20' },
+  { key: 'director', label: '销售总监 (陈明)', pwd: 'director123', color: 'bg-blue-500/10 text-brand-600 border-brand-500/20' },
+  { key: 'rep', label: '客户经理 (林雪 · 普通销售)', pwd: 'rep123', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  { key: 'finance', label: '财务审计 (建国)', pwd: 'finance123', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+];
+
 export default function LoginView({ hidden, onEnterWorkbench }) {
   const showToast = useToast();
   const [tab, setTab] = useState('account');
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState('director');
+  const [password, setPassword] = useState('director123');
+  const [loading, setLoading] = useState(false);
 
   const tabClass = (key) => (tab === key ? ACTIVE_TAB : INACTIVE_TAB);
-  const enterWorkbench = (message) => {
-    onEnterWorkbench();
-    showToast(message);
+
+  const performLogin = async (u, p) => {
+    setLoading(true);
+    try {
+      const res = await crmApi.login(u, p);
+      showToast(
+        `身份验证成功！欢迎 ${res.data.user.realName}，已根据角色 [${res.data.role.name}] 动态重载菜单与权限。`,
+        'success'
+      );
+      setTimeout(onEnterWorkbench, 350);
+    } catch (err) {
+      showToast(`登录失败: ${err.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
+
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    showToast('身份验证成功！欢迎陈明总监登录领航 CRM 工作台。');
-    setTimeout(onEnterWorkbench, 400);
+    performLogin(username, password);
+  };
+
+  const handleQuickLogin = (acc) => {
+    setUsername(acc.key);
+    setPassword(acc.pwd);
+    performLogin(acc.key, acc.pwd);
   };
 
   return (
@@ -138,6 +167,31 @@ export default function LoginView({ hidden, onEnterWorkbench }) {
                   企微 / 钉钉扫码
                 </button>
               </div>
+              {/* Demo Quick Login Chips */}
+              <div className="mb-5 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/80 space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                  <span className="flex items-center gap-1.5">
+                    <Icon name="sparkles" className="w-3.5 h-3.5 text-brand-500" />
+                    一键预设角色免密登录体验：
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-mono">GoFiber + Redis</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {DEMO_ACCOUNTS.map((acc) => (
+                    <button
+                      key={acc.key}
+                      type="button"
+                      disabled={loading}
+                      onClick={() => handleQuickLogin(acc)}
+                      className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold text-left flex items-center justify-between transition-all hover:scale-[1.01] active:scale-[0.99] ${acc.color}`}
+                    >
+                      <span className="truncate">{acc.label}</span>
+                      <Icon name="arrow-right" className="w-3 h-3 opacity-60" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Form: Account & Password */}
               <form
                 id="login-form-account"
@@ -146,7 +200,7 @@ export default function LoginView({ hidden, onEnterWorkbench }) {
               >
                 <div>
                   <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                    企业账号 / 邮箱 / 工号
+                    企业账号 (admin / director / rep / finance)
                   </label>
                   <div className="relative rounded-xl shadow-sm">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
@@ -155,9 +209,10 @@ export default function LoginView({ hidden, onEnterWorkbench }) {
                     <input
                       type="text"
                       id="login-account-input"
-                      defaultValue="chenming@navigator.cn"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
                       required
-                      placeholder="name@company.com"
+                      placeholder="admin / director / rep / finance"
                       className="block w-full pl-10 pr-3 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:ring-blue-500 transition-colors"
                     />
                   </div>
@@ -185,7 +240,8 @@ export default function LoginView({ hidden, onEnterWorkbench }) {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       id="login-pwd-input"
-                      defaultValue="••••••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       required
                       placeholder="输入企业登录密码"
                       className="block w-full pl-10 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:ring-blue-500 transition-colors font-mono"
@@ -216,14 +272,15 @@ export default function LoginView({ hidden, onEnterWorkbench }) {
                   </label>
                   <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
                     <Icon name="check-circle" className="w-3 h-3" />
-                    内部专网加速中
+                    GoFiber 后端连接中
                   </span>
                 </div>
                 <button
                   type="submit"
+                  disabled={loading}
                   className="w-full mt-2 py-3 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2 group"
                 >
-                  <span>登 录 进 入 工 作 台</span>
+                  <span>{loading ? '正在验证身份与动态权限...' : '登 录 进 入 工 作 台'}</span>
                   <Icon
                     name="arrow-right"
                     className="w-4 h-4 transition-transform group-hover:translate-x-1"
