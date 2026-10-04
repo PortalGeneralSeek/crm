@@ -1,7 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, Suspense, lazy } from 'react';
 import FollowupDrawer from './components/FollowupDrawer';
 import Header from './components/Header';
-import LoginView from './components/LoginView';
 import ModeSwitcher from './components/ModeSwitcher';
 import NewDealModal from './components/NewDealModal';
 import NewLeadModal from './components/NewLeadModal';
@@ -9,26 +8,48 @@ import Sidebar from './components/Sidebar';
 import { moduleTitles } from './data/moduleTitles';
 import { ToastProvider, useToast } from './hooks/useToast';
 import { useTheme } from './hooks/useTheme';
-import AiCopilot from './modules/AiCopilot';
-import Analytics from './modules/Analytics';
-import Contracts from './modules/Contracts';
-import Customers from './modules/Customers';
-import Dashboard from './modules/Dashboard';
-import Deals from './modules/Deals';
-import Leaderboard from './modules/Leaderboard';
-import Leads from './modules/Leads';
-import Payments from './modules/Payments';
-import Products from './modules/Products';
+import { useHashRoute } from '../shared/useHashRoute';
+
+// Lazy load modules for optimal initial bundle & performance
+const LoginView = lazy(() => import('./components/LoginView'));
+const Dashboard = lazy(() => import('./modules/Dashboard'));
+const Leads = lazy(() => import('./modules/Leads'));
+const Customers = lazy(() => import('./modules/Customers'));
+const Deals = lazy(() => import('./modules/Deals'));
+const Contracts = lazy(() => import('./modules/Contracts'));
+const Payments = lazy(() => import('./modules/Payments'));
+const Products = lazy(() => import('./modules/Products'));
+const Leaderboard = lazy(() => import('./modules/Leaderboard'));
+const Analytics = lazy(() => import('./modules/Analytics'));
+const AiCopilot = lazy(() => import('./modules/AiCopilot'));
+
+function ModuleSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse p-4">
+      <div className="h-24 bg-zinc-200/60 dark:bg-zinc-800/60 rounded-2xl w-full" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="h-24 bg-zinc-200/60 dark:bg-zinc-800/60 rounded-2xl" />
+        <div className="h-24 bg-zinc-200/60 dark:bg-zinc-800/60 rounded-2xl" />
+        <div className="h-24 bg-zinc-200/60 dark:bg-zinc-800/60 rounded-2xl" />
+        <div className="h-24 bg-zinc-200/60 dark:bg-zinc-800/60 rounded-2xl" />
+      </div>
+      <div className="h-80 bg-zinc-200/60 dark:bg-zinc-800/60 rounded-2xl w-full" />
+    </div>
+  );
+}
 
 function Workspace() {
   const showToast = useToast();
   const { isDark, toggleTheme } = useTheme();
+  const { path, navigate } = useHashRoute('/dashboard');
 
   const mainRef = useRef(null);
   const dashboardRef = useRef(null);
 
-  const [view, setView] = useState('workbench');
-  const [activeModule, setActiveModule] = useState('dashboard');
+  const view = path === '/login' ? 'login' : 'workbench';
+  const rawModule = path === '/login' ? 'dashboard' : path.replace(/^\//, '');
+  const activeModule = moduleTitles[rawModule] ? rawModule : 'dashboard';
+
   const [navigationCount, setNavigationCount] = useState(0);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [dealModalOpen, setDealModalOpen] = useState(false);
@@ -39,14 +60,14 @@ function Workspace() {
   const [followupCompany, setFollowupCompany] = useState('大华技术股份有限公司');
 
   const switchView = (viewName) => {
-    setView(viewName === 'workbench' ? 'workbench' : 'login');
+    navigate(viewName === 'login' ? '/login' : '/dashboard');
     if (viewName === 'workbench') {
       setTimeout(() => dashboardRef.current?.resizeChart(), 100);
     }
   };
 
   const switchModule = (moduleKey) => {
-    setActiveModule(moduleKey);
+    navigate(`/${moduleKey}`);
     setNavigationCount((n) => n + 1);
     if (moduleKey === 'dashboard') {
       setTimeout(() => dashboardRef.current?.resizeChart(), 60);
@@ -54,7 +75,6 @@ function Workspace() {
     showToast(`已进入: ${moduleTitles[moduleKey] || moduleKey}`);
   };
 
-  // Runs after the new module is visible so the smooth scroll starts from the updated layout.
   useLayoutEffect(() => {
     if (navigationCount > 0) mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [navigationCount]);
@@ -97,7 +117,9 @@ function Workspace() {
         onToggleTheme={handleToggleTheme}
       />
 
-      <LoginView hidden={view !== 'login'} onEnterWorkbench={() => switchView('workbench')} />
+      <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-[#09090b]" />}>
+        <LoginView hidden={view !== 'login'} onEnterWorkbench={() => switchView('workbench')} />
+      </Suspense>
 
       <div
         id="view-workbench"
@@ -114,6 +136,7 @@ function Workspace() {
             switchView('login');
             showToast('您已成功退出工作台');
           }}
+          onSwitchModule={switchModule}
         />
 
         <div className="flex-1 flex overflow-hidden">
@@ -128,26 +151,36 @@ function Workspace() {
             ref={mainRef}
             className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 space-y-6"
           >
-            <Dashboard
-              ref={dashboardRef}
-              active={isActive('dashboard')}
-              isDark={isDark}
-              onSwitchModule={switchModule}
-              onOpenFollowup={openFollowupDrawer}
-            />
-            <Leads
-              active={isActive('leads')}
-              onOpenNewLead={() => setLeadModalOpen(true)}
-              onConvertLead={convertLeadToDeal}
-            />
-            <Customers active={isActive('customers')} onOpenFollowup={openFollowupDrawer} />
-            <Deals active={isActive('deals')} onOpenNewDeal={() => setDealModalOpen(true)} />
-            <Contracts active={isActive('contracts')} />
-            <Payments active={isActive('payments')} />
-            <Products active={isActive('products')} />
-            <Leaderboard active={isActive('leaderboard')} />
-            <Analytics active={isActive('analytics')} isDark={isDark} />
-            <AiCopilot active={isActive('ai-copilot')} />
+            <Suspense fallback={<ModuleSkeleton />}>
+              {isActive('dashboard') && (
+                <Dashboard
+                  ref={dashboardRef}
+                  active={true}
+                  isDark={isDark}
+                  onSwitchModule={switchModule}
+                  onOpenFollowup={openFollowupDrawer}
+                />
+              )}
+              {isActive('leads') && (
+                <Leads
+                  active={true}
+                  onOpenNewLead={() => setLeadModalOpen(true)}
+                  onConvertLead={convertLeadToDeal}
+                />
+              )}
+              {isActive('customers') && (
+                <Customers active={true} onOpenFollowup={openFollowupDrawer} />
+              )}
+              {isActive('deals') && (
+                <Deals active={true} onOpenNewDeal={() => setDealModalOpen(true)} />
+              )}
+              {isActive('contracts') && <Contracts active={true} />}
+              {isActive('payments') && <Payments active={true} />}
+              {isActive('products') && <Products active={true} />}
+              {isActive('leaderboard') && <Leaderboard active={true} />}
+              {isActive('analytics') && <Analytics active={true} isDark={isDark} />}
+              {isActive('ai-copilot') && <AiCopilot active={true} />}
+            </Suspense>
           </main>
         </div>
       </div>

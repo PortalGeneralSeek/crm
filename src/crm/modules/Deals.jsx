@@ -1,169 +1,68 @@
-import { useState } from 'react';
 import Icon from '../../shared/Icon';
 import { useToast } from '../hooks/useToast';
+import { useCrmStore, crmStore } from '../store/crmStore';
 
-const COLUMNS = [
+const STAGE_CONFIG = [
   {
-    dot: 'bg-blue-500',
+    key: '初步接洽',
     title: '初步接洽 (15%)',
-    total: '¥1.8M',
+    dot: 'bg-blue-500',
     totalClass: 'text-[10px] font-mono text-zinc-400',
-    cards: [
-      {
-        id: 'hikvision',
-        name: '海康威视',
-        desc: '视觉AI模型私有化',
-        amount: '¥600,000',
-        cardClass:
-          'bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs',
-        nameClass: 'text-xs font-bold',
-        amountClass: 'mt-2 text-xs font-mono font-bold text-brand-600',
-        stage: '方案呈现',
-        buttonClass:
-          'mt-3 w-full py-1 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-brand-500 hover:text-white text-[11px] font-medium transition-colors',
-        buttonLabel: '推进至方案呈现 →',
-      },
-      {
-        id: 'sugon',
-        name: '中科曙光',
-        desc: '超算作业调度软件',
-        amount: '¥1,200,000',
-        cardClass:
-          'bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs',
-        nameClass: 'text-xs font-bold',
-        amountClass: 'mt-2 text-xs font-mono font-bold text-brand-600',
-        stage: '方案呈现',
-        buttonClass:
-          'mt-3 w-full py-1 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-brand-500 hover:text-white text-[11px] font-medium transition-colors',
-        buttonLabel: '推进至方案呈现 →',
-      },
-    ],
+    nextStage: '方案呈现',
+    nextBtnLabel: '推进至方案呈现 →',
+    colorClass: 'text-brand-600',
   },
   {
-    dot: 'bg-indigo-500',
+    key: '方案呈现',
     title: '方案呈现 (35%)',
-    total: '¥2.65M',
+    dot: 'bg-indigo-500',
     totalClass: 'text-[10px] font-mono text-zinc-400',
-    cards: [
-      {
-        id: 'sf',
-        name: '顺丰科技',
-        desc: '供应链端到端调度',
-        amount: '¥850,000',
-        cardClass:
-          'bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs',
-        nameClass: 'text-xs font-bold',
-        amountClass: 'mt-2 text-xs font-mono font-bold text-indigo-600',
-        stage: '商务谈判',
-        buttonClass:
-          'mt-3 w-full py-1 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-indigo-600 hover:text-white text-[11px] font-medium transition-colors',
-        buttonLabel: '推进至商务谈判 →',
-      },
-      {
-        id: 'sensetime',
-        name: '商汤科技',
-        desc: '多模态基准自动化评测',
-        amount: '¥500,000',
-        cardClass:
-          'bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs',
-        nameClass: 'text-xs font-bold',
-        amountClass: 'mt-2 text-xs font-mono font-bold text-indigo-600',
-        stage: '商务谈判',
-        buttonClass:
-          'mt-3 w-full py-1 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-indigo-600 hover:text-white text-[11px] font-medium transition-colors',
-        buttonLabel: '推进至商务谈判 →',
-      },
-    ],
+    nextStage: '商务谈判',
+    nextBtnLabel: '推进至商务谈判 →',
+    colorClass: 'text-indigo-600',
   },
   {
-    dot: 'bg-purple-500',
+    key: '商务谈判',
     title: '商务谈判 (60%)',
-    total: '¥3.9M',
+    dot: 'bg-purple-500',
     totalClass: 'text-[10px] font-mono text-zinc-400',
-    cards: [
-      {
-        id: 'htsc',
-        name: '华泰证券',
-        desc: '量化风控套件二期',
-        amount: '¥1,500,000',
-        cardClass:
-          'bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs',
-        nameClass: 'text-xs font-bold',
-        amountClass: 'mt-2 text-xs font-mono font-bold text-purple-600',
-        stage: '合同审批',
-        buttonClass:
-          'mt-3 w-full py-1 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-purple-600 hover:text-white text-[11px] font-medium transition-colors',
-        buttonLabel: '推进至合同审批 →',
-      },
-    ],
+    nextStage: '合同审批',
+    nextBtnLabel: '推进至合同审批 →',
+    colorClass: 'text-purple-600',
   },
   {
-    dot: 'bg-amber-500',
+    key: '合同审批',
     title: '合同审批 (85%)',
-    total: '¥2.4M',
+    dot: 'bg-amber-500',
     totalClass: 'text-[10px] font-mono text-zinc-400',
-    cards: [
-      {
-        id: 'dahua',
-        name: '大华股份',
-        desc: '视频集群分析授权',
-        amount: '¥2,400,000',
-        cardClass:
-          'bg-white dark:bg-zinc-800 p-3 rounded-xl border border-amber-300 dark:border-amber-800 shadow-xs',
-        nameClass: 'text-xs font-bold',
-        amountClass: 'mt-2 text-xs font-mono font-bold text-amber-600',
-        stage: '赢单签约',
-        buttonClass:
-          'mt-3 w-full py-1 rounded bg-amber-500 text-white hover:bg-amber-600 text-[11px] font-semibold transition-colors',
-        buttonLabel: '双方盖章赢单！🎉',
-      },
-    ],
+    nextStage: '赢单签约',
+    nextBtnLabel: '双方盖章赢单！🎉',
+    colorClass: 'text-amber-600',
   },
   {
-    dot: 'bg-emerald-500',
+    key: '赢单签约',
     title: '赢单签约 (100%)',
-    total: '¥825,400',
+    dot: 'bg-emerald-500',
     totalClass: 'text-[10px] font-mono text-emerald-600 font-bold',
-    cards: [
-      {
-        id: 'lixiang',
-        name: '理想汽车',
-        desc: '车载语音交互模块',
-        amount: '¥525,400',
-        cardClass:
-          'bg-white dark:bg-zinc-800 p-3 rounded-xl border border-emerald-300 dark:border-emerald-800 shadow-xs',
-        nameClass: 'text-xs font-bold text-emerald-700 dark:text-emerald-300',
-        amountClass: 'mt-2 text-xs font-mono font-bold text-emerald-600',
-        badge: '首付款已到账',
-      },
-      {
-        id: 'weimob',
-        name: '微盟集团',
-        desc: '数据中台营销扩容',
-        amount: '¥300,000',
-        cardClass:
-          'bg-white dark:bg-zinc-800 p-3 rounded-xl border border-emerald-300 dark:border-emerald-800 shadow-xs',
-        nameClass: 'text-xs font-bold text-emerald-700 dark:text-emerald-300',
-        amountClass: 'mt-2 text-xs font-mono font-bold text-emerald-600',
-        badge: '已完成交付验收',
-      },
-    ],
+    nextStage: null,
+    nextBtnLabel: null,
+    colorClass: 'text-emerald-600',
   },
 ];
 
 export default function Deals({ active, onOpenNewDeal }) {
   const showToast = useToast();
-  const [shrinking, setShrinking] = useState([]);
-  const [removed, setRemoved] = useState([]);
+  const { deals } = useCrmStore();
 
-  // Columns keep their totals and the card is never re-added elsewhere; the card just disappears.
-  const moveDealStage = (id, nextStage) => {
-    setShrinking((list) => [...list, id]);
-    setTimeout(() => {
-      setRemoved((list) => [...list, id]);
-      showToast(`商机已推进至「${nextStage}」阶段！加权签约概率提升。`, 'success');
-    }, 200);
+  const handleAdvance = (deal, nextStage) => {
+    crmStore.updateDealStage(deal.id, nextStage);
+    showToast(`商机「${deal.name}」已推进至「${nextStage}」阶段！加权签约概率提升。`, 'success');
   };
+
+  const totalWeighted = deals.reduce((acc, d) => {
+    const weightMap = { 初步接洽: 0.15, 方案呈现: 0.35, 商务谈判: 0.6, 合同审批: 0.85, 赢单签约: 1.0 };
+    return acc + (d.amount || 0) * (weightMap[d.stage] || 0.15);
+  }, 0);
 
   return (
     <div id="module-deals" className={`crm-module ${active ? '' : 'hidden '}space-y-6`}>
@@ -173,67 +72,91 @@ export default function Deals({ active, onOpenNewDeal }) {
             <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
               商机阶段漏斗看板 (Pipeline Kanban)
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-blue-950 text-brand-600 text-xs font-semibold">
-              加权总额 ¥6,420,000
+            <span className="px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-blue-950 text-brand-600 dark:text-blue-400 text-xs font-semibold">
+              加权总额 ¥{(totalWeighted / 10000).toFixed(1)}万 (真实动态汇总)
             </span>
           </div>
           <p className="text-xs text-zinc-400 mt-1">
-            全生命周期商机阶段推进，支持随时拖拽调整与预测核算
+            全生命周期商机阶段推进，支持一键推进流转与多阶段金额实时自动核算
           </p>
         </div>
         <button
           onClick={onOpenNewDeal}
-          className="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-md flex items-center gap-1.5"
+          className="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs shadow-md flex items-center gap-1.5 transition-all"
         >
           <Icon name="plus" className="w-3.5 h-3.5" />
           <span>创建商机项目</span>
         </button>
       </div>
+
       {/* 5-Stage Complete Kanban Board */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {COLUMNS.map((column) => (
-          <div
-            key={column.title}
-            className="bg-zinc-50 dark:bg-zinc-900/60 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${column.dot}`} />
-                  <span className="text-xs font-bold">{column.title}</span>
+        {STAGE_CONFIG.map((stage) => {
+          const stageDeals = deals.filter((d) => d.stage === stage.key);
+          const stageTotal = stageDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
+          const formattedTotal =
+            stageTotal >= 1000000
+              ? `¥${(stageTotal / 1000000).toFixed(2)}M`
+              : `¥${(stageTotal / 1000).toFixed(0)}K`;
+
+          return (
+            <div
+              key={stage.key}
+              className="bg-zinc-50 dark:bg-zinc-900/60 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between min-h-[480px]"
+            >
+              <div>
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${stage.dot}`} />
+                    <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                      {stage.title}
+                    </span>
+                  </div>
+                  <span className={stage.totalClass}>{formattedTotal}</span>
                 </div>
-                <span className={column.totalClass}>{column.total}</span>
-              </div>
-              <div className="space-y-3">
-                {column.cards
-                  .filter((card) => !removed.includes(card.id))
-                  .map((card) => (
+
+                <div className="space-y-3">
+                  {stageDeals.map((deal) => (
                     <div
-                      key={card.id}
-                      className={card.cardClass}
-                      style={shrinking.includes(card.id) ? { transform: 'scale(0.95)' } : undefined}
+                      key={deal.id}
+                      className="bg-white dark:bg-zinc-800 p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xs hover:border-brand-500/50 transition-all"
                     >
-                      <div className={card.nameClass}>{card.name}</div>
-                      <div className="text-[11px] text-zinc-400 mt-0.5">{card.desc}</div>
-                      <div className={card.amountClass}>{card.amount}</div>
-                      {card.badge ? (
-                        <span className="inline-block mt-2 px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 text-[10px] font-semibold">
-                          {card.badge}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                          {deal.name}
                         </span>
-                      ) : (
+                        <span className="text-[10px] text-zinc-400 font-mono">{deal.owner || '陈明'}</span>
+                      </div>
+                      <div className="text-[11px] text-zinc-400 mt-0.5">{deal.desc}</div>
+                      <div className={`mt-2 text-xs font-mono font-bold ${stage.colorClass}`}>
+                        ¥{Number(deal.amount || 0).toLocaleString()}
+                      </div>
+
+                      {stage.nextStage ? (
                         <button
-                          onClick={() => moveDealStage(card.id, card.stage)}
-                          className={card.buttonClass}
+                          onClick={() => handleAdvance(deal, stage.nextStage)}
+                          className="mt-3 w-full py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-700 hover:bg-brand-500 hover:text-white text-[11px] font-medium transition-colors text-zinc-700 dark:text-zinc-200 flex items-center justify-center gap-1"
                         >
-                          {card.buttonLabel}
+                          <span>{stage.nextBtnLabel}</span>
                         </button>
+                      ) : (
+                        <span className="inline-block mt-3 px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold">
+                          首付款已到账 · 交付进行中
+                        </span>
                       )}
                     </div>
                   ))}
+
+                  {stageDeals.length === 0 && (
+                    <div className="text-center py-8 text-zinc-400 text-xs border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
+                      暂无该阶段商机
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

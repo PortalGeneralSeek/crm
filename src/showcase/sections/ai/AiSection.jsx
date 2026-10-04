@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useToast } from '../../components/ToastProvider';
 import AiHeader from './AiHeader';
+import AiSettingsModal from './AiSettingsModal';
 import ChatComposer from './ChatComposer';
 import ChatToolbar from './ChatToolbar';
 import { AiMessage, SeedThread, UserMessage, WelcomeCard } from './ChatMessages';
@@ -11,6 +12,7 @@ export default function AiSection({ active, ai }) {
   const { showToast } = useToast();
   const [webSearch, setWebSearch] = useState(false);
   const [deepReasoning, setDeepReasoning] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { chat, inputRef, containerRef, createNewChat, handleSubmit, sendQuickPrompt, selectChatSession } =
     ai;
 
@@ -28,7 +30,7 @@ export default function AiSection({ active, ai }) {
 
   return (
     <section id="section-ai" className={`tab-section space-y-8${active ? '' : ' hidden'}`}>
-      <AiHeader onNewChat={createNewChat} />
+      <AiHeader onNewChat={createNewChat} onOpenSettings={() => setSettingsOpen(true)} />
 
       {/* 3-Column Immersive AI Studio Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 h-[760px] bg-white dark:bg-[#141518] rounded-3xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-sm overflow-hidden">
@@ -54,7 +56,17 @@ export default function AiSection({ active, ai }) {
               message.role === 'user' ? (
                 <UserMessage key={message.key} domId={message.domId} text={message.text} />
               ) : (
-                <AiMessage key={message.key} domId={message.domId} done={message.done} />
+                <AiMessage
+                  key={message.key}
+                  domId={message.domId}
+                  done={message.done}
+                  text={message.text}
+                  thinkingLines={message.thinkingLines}
+                  filename={message.filename}
+                  code={message.code}
+                  error={message.error}
+                  durationMs={message.durationMs}
+                />
               ),
             )}
           </div>
@@ -71,6 +83,12 @@ export default function AiSection({ active, ai }) {
 
         <ParameterPanel />
       </div>
+
+      <AiSettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onSave={() => showToast('AI 大模型接入配置已成功保存 ✨', 'success')}
+      />
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Icon from '../../shared/Icon';
 import { useToast } from '../hooks/useToast';
+import { crmStore } from '../store/crmStore';
 
 export default function NewDealModal({
   open,
@@ -15,8 +16,18 @@ export default function NewDealModal({
 
   const handleCreateDeal = (e) => {
     e.preventDefault();
+    if (!company.trim() || !title.trim()) return;
+    crmStore.addDeal({
+      name: company.trim(),
+      desc: title.trim(),
+      amount: Number(amount) || 0,
+      stage: '初步接洽',
+    });
     onClose();
     showToast(`商机「${title}」创建成功！预估金额 ¥${Number(amount).toLocaleString()}`, 'success');
+    if (onTitleChange) onTitleChange('');
+    if (onCompanyChange) onCompanyChange('');
+    setAmount('');
   };
 
   return (

@@ -1,16 +1,29 @@
 import { useState } from 'react';
 import Icon from '../../shared/Icon';
 import { useToast } from '../hooks/useToast';
+import { crmStore } from '../store/crmStore';
 
 export default function NewLeadModal({ open, onClose }) {
   const showToast = useToast();
   const [company, setCompany] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [source, setSource] = useState('市场活动 / 峰会展台');
 
   const handleCreateLead = (e) => {
     e.preventDefault();
+    if (!company.trim()) return;
+    crmStore.addLead({
+      company: company.trim(),
+      name: name.trim() || '联系人',
+      contact: `${name.trim() || '联系人'} · ${phone.trim() || '未预留电话'}`,
+      channel: source,
+    });
     onClose();
-    showToast(`线索「${company} - ${name}」已录入线索池！`, 'success');
+    showToast(`线索「${company} - ${name || '新联系人'}」已成功录入线索池！`, 'success');
+    setCompany('');
+    setName('');
+    setPhone('');
   };
 
   return (

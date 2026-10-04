@@ -299,8 +299,84 @@ export function UserMessage({ domId, text }) {
   );
 }
 
-export function AiMessage({ domId, done }) {
+function AiContentRenderer({ text, done, fallbackFilename, fallbackCode }) {
+  if (!text) {
+    if (done && fallbackCode) {
+      return (
+        <>
+          <p>
+            已为你基于 <strong>pro-components</strong>{' '}
+            设计规范生成完整的前端组件代码，支持完整的暗黑主题自适应：
+          </p>
+          <CodeWindow filename={fallbackFilename || 'ResponsiveComponent.tsx'} code={fallbackCode} />
+        </>
+      );
+    }
+    return (
+      <div className="flex items-center gap-2 text-zinc-400 text-xs">
+        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+        正在组织高品质前端代码与结构...
+      </div>
+    );
+  }
+
+  // Parse code blocks in markdown: ```lang\ncode```
+  const parts = [];
+  const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    const lang = match[1] || 'tsx';
+    let code = match[2];
+    let filename = `Component.${lang}`;
+    const commentMatch = code.match(/^\/\/\s*([\w.-]+)\n/);
+    if (commentMatch) {
+      filename = commentMatch[1];
+      code = code.replace(/^\/\/\s*[\w.-]+\n/, '');
+    }
+    parts.push({ type: 'code', lang, filename, code });
+    lastIndex = codeBlockRegex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+
+  return (
+    <div className="space-y-3">
+      {parts.map((p, idx) =>
+        p.type === 'code' ? (
+          <CodeWindow key={idx} filename={p.filename} code={p.code} />
+        ) : (
+          <div key={idx} className="whitespace-pre-wrap leading-relaxed text-zinc-800 dark:text-zinc-200">
+            {p.content}
+            {!done && idx === parts.length - 1 && (
+              <span className="inline-block w-1.5 h-3.5 bg-primary ml-1 animate-pulse align-middle" />
+            )}
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+export function AiMessage({
+  domId,
+  done,
+  text,
+  thinkingLines,
+  filename,
+  code,
+  error,
+  durationMs,
+}) {
   const { showToast } = useToast();
+  const effectiveThinking = thinkingLines && thinkingLines.length > 0 ? thinkingLines : LIVE_THINKING;
+
   return (
     <div
       id={domId}
@@ -308,37 +384,54 @@ export function AiMessage({ domId, done }) {
     >
       <AiAvatar spinning={!done} />
       <div className="flex-1 max-w-[88%] bg-white dark:bg-[#16171a] p-5 rounded-2xl rounded-tl-xs text-xs space-y-4 border border-zinc-200/90 dark:border-zinc-800/90 shadow-sm">
-        <ThinkingBlock done={done} lines={LIVE_THINKING} />
+        <ThinkingBlock done={done} lines={effectiveThinking} />
         <div className="ai-stream-text space-y-3 leading-relaxed text-zinc-800 dark:text-zinc-200">
-          {done ? (
-            <>
-              <p>
-                已为你基于 <strong>pro-components</strong>{' '}
-                设计规范生成完整的前端组件代码，支持完整的暗黑主题自适应：
-              </p>
-              <CodeWindow filename="ResponsiveComponent.tsx" code={RESPONSIVE_COMPONENT_CODE} />
-              <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-zinc-400">
-                <div className="flex items-center gap-4 text-[11px]">
-                  <FeedbackButton icon="thumbs-up" onClick={() => showToast('已记录优质响应！', 'success')}>
-                    赞
-                  </FeedbackButton>
-                  <FeedbackButton icon="thumbs-down" onClick={() => showToast('已记录优化反馈！')}>
-                    踩
-                  </FeedbackButton>
-                  <FeedbackButton icon="rotate-ccw" onClick={() => showToast('重新生成中...')}>
-                    重新生成
-                  </FeedbackButton>
-                  <FeedbackButton icon="copy" onClick={() => showToast('Markdown 已复制到剪贴板！')}>
-                    复制全文
-                  </FeedbackButton>
-                </div>
-                <span className="text-[10px] text-zinc-400 font-mono">Tokens: 342 · 18ms</span>
+          {error ? (
+            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 space-y-2">
+              <div className="flex items-center gap-2 font-semibold">
+                <Icon name="alert-triangle" className="w-4 h-4 shrink-0" />
+                <span>请求处理异常</span>
               </div>
-            </>
+              <p className="text-xs leading-relaxed">{error}</p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                提示：您可以点击顶部「API 接口配置」切换为「仿真演示引擎」或更换有效的 API Key / Base URL。
+              </p>
+            </div>
           ) : (
-            <div className="flex items-center gap-2 text-zinc-400 text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-              正在组织高品质前端代码与结构...
+            <AiContentRenderer
+              text={text}
+              done={done}
+              fallbackFilename={filename || 'ResponsiveComponent.tsx'}
+              fallbackCode={code || RESPONSIVE_COMPONENT_CODE}
+            />
+          )}
+
+          {done && !error && (
+            <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-zinc-400">
+              <div className="flex items-center gap-4 text-[11px]">
+                <FeedbackButton icon="thumbs-up" onClick={() => showToast('已记录优质响应！', 'success')}>
+                  赞
+                </FeedbackButton>
+                <FeedbackButton icon="thumbs-down" onClick={() => showToast('已记录优化反馈！')}>
+                  踩
+                </FeedbackButton>
+                <FeedbackButton icon="rotate-ccw" onClick={() => showToast('重新生成中...')}>
+                  重新生成
+                </FeedbackButton>
+                <FeedbackButton
+                  icon="copy"
+                  onClick={() => {
+                    navigator.clipboard.writeText(text || code || RESPONSIVE_COMPONENT_CODE);
+                    showToast('Markdown 已复制到剪贴板！', 'success');
+                  }}
+                >
+                  复制全文
+                </FeedbackButton>
+              </div>
+              <span className="text-[10px] text-zinc-400 font-mono">
+                Tokens: {Math.max(48, Math.round((text?.length || 200) / 4))} ·{' '}
+                {durationMs ? `${durationMs}ms` : '18ms'}
+              </span>
             </div>
           )}
         </div>

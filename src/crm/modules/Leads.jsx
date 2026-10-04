@@ -1,58 +1,7 @@
 import { useState } from 'react';
 import Icon from '../../shared/Icon';
 import { useToast } from '../hooks/useToast';
-
-const LEADS = [
-  {
-    company: '上海哔哩哔哩科技有限公司',
-    name: '张博雅',
-    contact: '张博雅 · 139****1182',
-    level: {
-      className:
-        'px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 font-bold text-[10px]',
-      text: 'A级 · 高意向',
-    },
-    channel: '2026 全球智能大会展台',
-    status: { className: 'text-amber-500 font-medium', text: '跟进中' },
-    owner: '陈明',
-    convertible: true,
-  },
-  {
-    company: '南京中兴软创科技',
-    name: '刘建军',
-    contact: '刘建军 · 138****9923',
-    level: {
-      className:
-        'px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 font-bold text-[10px]',
-      text: 'B级 · 中意向',
-    },
-    channel: '官方网站表单留资',
-    status: { className: 'text-blue-500 font-medium', text: '待跟进' },
-    owner: '李晓鹏',
-    convertible: true,
-  },
-  {
-    company: '苏州汇川技术股份有限公司',
-    name: '朱伟',
-    contact: '朱伟 · 150****6621',
-    level: {
-      className:
-        'px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 font-bold text-[10px]',
-      text: 'A级 · 高意向',
-    },
-    channel: '老客户转介绍',
-    status: { className: 'text-emerald-500 font-medium', text: '已转商机' },
-    owner: '陈明',
-    convertible: false,
-  },
-];
-
-const CATEGORIES = [
-  { key: 'all', label: '全部 (88)' },
-  { key: '待跟进', label: '待跟进 (24)' },
-  { key: '跟进中', label: '跟进中 (36)' },
-  { key: '已转商机', label: '已转商机 (28)' },
-];
+import { useCrmStore, crmStore } from '../store/crmStore';
 
 const ACTIVE_CATEGORY =
   'leads-cat-btn px-3 py-1 rounded-lg text-xs font-semibold bg-brand-500 text-white';
@@ -73,9 +22,17 @@ const rowText = (lead) =>
 
 export default function Leads({ active, onOpenNewLead, onConvertLead }) {
   const showToast = useToast();
+  const { leads } = useCrmStore();
   const [category, setCategory] = useState('all');
   // Category buttons and the search box each overwrite the other's row visibility; the last one used wins.
   const [filter, setFilter] = useState({ kind: 'category', value: 'all' });
+
+  const categories = [
+    { key: 'all', label: `全部 (${leads.length})` },
+    { key: '待跟进', label: `待跟进 (${leads.filter((l) => l.status.text === '待跟进').length})` },
+    { key: '跟进中', label: `跟进中 (${leads.filter((l) => l.status.text === '跟进中').length})` },
+    { key: '已转商机', label: `已转商机 (${leads.filter((l) => l.status.text === '已转商机').length})` },
+  ];
 
   const isVisible = (lead) => {
     const text = rowText(lead);
@@ -83,9 +40,14 @@ export default function Leads({ active, onOpenNewLead, onConvertLead }) {
     return !filter.value || text.toLowerCase().includes(filter.value);
   };
 
-  const handleConvert = (company, contact) => {
-    showToast(`线索「${company} - ${contact}」已成功转化为商机！`, 'success');
-    onConvertLead(company);
+  const handleConvert = (lead) => {
+    crmStore.convertLeadToDeal(lead.id, {
+      company: lead.company,
+      title: `${lead.company} 2026年度企业数字化采购`,
+      amount: 600000,
+    });
+    showToast(`线索「${lead.company}」已成功转化为商机并写入商机看板！`, 'success');
+    if (onConvertLead) onConvertLead(lead.company);
   };
 
   return (
@@ -146,7 +108,7 @@ export default function Leads({ active, onOpenNewLead, onConvertLead }) {
       <div className="bg-white dark:bg-[#121316] rounded-2xl border border-zinc-200 dark:border-zinc-800 glow-card overflow-hidden">
         <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <button
                 key={c.key}
                 onClick={() => {
@@ -182,9 +144,9 @@ export default function Leads({ active, onOpenNewLead, onConvertLead }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/80" id="leads-tbody">
-              {LEADS.map((lead) => (
+              {leads.map((lead) => (
                 <tr
-                  key={lead.company}
+                  key={lead.id || lead.company}
                   className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40"
                   style={isVisible(lead) ? undefined : { display: 'none' }}
                 >
@@ -193,17 +155,21 @@ export default function Leads({ active, onOpenNewLead, onConvertLead }) {
                   </td>
                   <td className="py-3 px-4">{lead.contact}</td>
                   <td className="py-3 px-4">
-                    <span className={lead.level.className}>{lead.level.text}</span>
+                    <span className={lead.level?.className || 'px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[10px]'}>
+                      {lead.level?.text || '意向客户'}
+                    </span>
                   </td>
                   <td className="py-3 px-4 text-zinc-500">{lead.channel}</td>
                   <td className="py-3 px-4">
-                    <span className={lead.status.className}>{lead.status.text}</span>
+                    <span className={lead.status?.className || 'text-blue-500 font-medium'}>
+                      {lead.status?.text || '待跟进'}
+                    </span>
                   </td>
                   <td className="py-3 px-4">{lead.owner}</td>
                   <td className="py-3 px-4 text-right">
                     {lead.convertible ? (
                       <button
-                        onClick={() => handleConvert(lead.company, lead.name)}
+                        onClick={() => handleConvert(lead)}
                         className="px-2.5 py-1 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium text-[11px] shadow-xs"
                       >
                         一键转商机

@@ -1,5 +1,7 @@
+import { useState, useEffect, useRef } from 'react';
 import Icon from '../../shared/Icon';
 import { useToast } from '../hooks/useToast';
+import { useCrmStore } from '../store/crmStore';
 
 export default function Header({
   title,
@@ -9,8 +11,60 @@ export default function Header({
   onNewLead,
   onOpenAiCopilot,
   onLogout,
+  onSwitchModule,
 }) {
   const showToast = useToast();
+  const { leads, deals, customers } = useCrmStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [showResults, setShowResults] = useState(false);
+  const searchContainerRef = useRef(null);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchedLeads = leads.filter(
+        (l) => l.company.toLowerCase().includes(q) || l.contact.toLowerCase().includes(q)
+      );
+      const matchedDeals = deals.filter(
+        (d) => d.name.toLowerCase().includes(q) || d.desc.toLowerCase().includes(q)
+      );
+      const matchedCustomers = customers.filter(
+        (c) => c.name.toLowerCase().includes(q) || c.industry.toLowerCase().includes(q)
+      );
+
+      setSearchResults({
+        leads: matchedLeads,
+        deals: matchedDeals,
+        customers: matchedCustomers,
+        total: matchedLeads.length + matchedDeals.length + matchedCustomers.length,
+      });
+      setShowResults(true);
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, leads, deals, customers]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const handleSelectResult = (moduleKey, itemName) => {
+    setShowResults(false);
+    setSearchQuery('');
+    if (onSwitchModule) onSwitchModule(moduleKey);
+    showToast(`已定位并跳转至：${itemName}`);
+  };
 
   return (
     <header className="h-16 flex-none bg-white dark:bg-[#121316] border-b border-zinc-200 dark:border-zinc-800 z-30 px-4 lg:px-6 flex items-center justify-between">
@@ -37,24 +91,104 @@ export default function Header({
             </span>
           </div>
         </div>
-        {/* Global Search Bar */}
-        <div className="hidden md:flex items-center relative w-80 lg:w-96">
+        {/* Global Search Bar with Live Results Popover */}
+        <div ref={searchContainerRef} className="hidden md:flex items-center relative w-80 lg:w-96">
           <Icon
             name="search"
             className="w-4 h-4 text-zinc-400 absolute left-3.5 pointer-events-none"
-          />{' '}
+          />
           <input
             type="text"
             id="global-crm-search"
-            onChange={(e) => {
-              if (e.target.value.trim()) showToast(`全局匹配关键字: "${e.target.value}"`);
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => {
+              if (searchResults && searchResults.total > 0) setShowResults(true);
             }}
             placeholder="全局搜索客户、商机、线索或合同编号 (⌘K)..."
             className="w-full pl-9 pr-14 py-1.5 bg-zinc-100 dark:bg-zinc-800/80 border border-transparent focus:border-brand-500 dark:focus:border-blue-500 focus:bg-white dark:focus:bg-zinc-900 rounded-xl text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 transition-all outline-none"
-          />{' '}
+          />
           <kbd className="absolute right-2.5 px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300 rounded border border-zinc-200 dark:border-zinc-600 shadow-xs pointer-events-none">
             ⌘K
           </kbd>
+
+          {/* Search Results Dropdown */}
+          {showResults && searchResults && (
+            <div className="absolute top-10 left-0 right-0 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl p-2 z-50 max-h-80 overflow-y-auto custom-scrollbar text-xs">
+              {searchResults.total === 0 ? (
+                <div className="text-center py-4 text-zinc-400 text-xs">未找到包含 "{searchQuery}" 的相关业务数据</div>
+              ) : (
+                <div className="space-y-2">
+                  {searchResults.leads.length > 0 && (
+                    <div>
+                      <div className="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase">
+                        线索 ({searchResults.leads.length})
+                      </div>
+                      {searchResults.leads.map((l) => (
+                        <div
+                          key={l.id}
+                          onClick={() => handleSelectResult('leads', l.company)}
+                          className="flex items-center justify-between p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                        >
+                          <div>
+                            <div className="font-bold text-zinc-900 dark:text-zinc-100">{l.company}</div>
+                            <div className="text-[10px] text-zinc-400">{l.contact}</div>
+                          </div>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">
+                            {l.status?.text || '线索'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {searchResults.deals.length > 0 && (
+                    <div>
+                      <div className="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase">
+                        商机 ({searchResults.deals.length})
+                      </div>
+                      {searchResults.deals.map((d) => (
+                        <div
+                          key={d.id}
+                          onClick={() => handleSelectResult('deals', d.name)}
+                          className="flex items-center justify-between p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                        >
+                          <div>
+                            <div className="font-bold text-zinc-900 dark:text-zinc-100">{d.name}</div>
+                            <div className="text-[10px] text-zinc-400">{d.desc}</div>
+                          </div>
+                          <span className="font-mono text-xs font-bold text-brand-600">
+                            ¥{Number(d.amount).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {searchResults.customers.length > 0 && (
+                    <div>
+                      <div className="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase">
+                        客户 ({searchResults.customers.length})
+                      </div>
+                      {searchResults.customers.map((c) => (
+                        <div
+                          key={c.id}
+                          onClick={() => handleSelectResult('customers', c.name)}
+                          className="flex items-center justify-between p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                        >
+                          <div>
+                            <div className="font-bold text-zinc-900 dark:text-zinc-100">{c.name}</div>
+                            <div className="text-[10px] text-zinc-400">{c.industry}</div>
+                          </div>
+                          <span className="text-[10px] text-emerald-600 font-semibold">{c.health}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
       {/* Quick Action Buttons & User Menu */}

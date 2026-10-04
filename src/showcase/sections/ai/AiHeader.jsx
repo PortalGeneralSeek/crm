@@ -1,6 +1,6 @@
 import Icon from '../../../shared/Icon';
 
-export default function AiHeader({ onNewChat }) {
+export default function AiHeader({ onNewChat, onOpenSettings }) {
   return (
     <>
       <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-zinc-200 dark:border-zinc-800 gap-4">
@@ -23,6 +23,13 @@ export default function AiHeader({ onNewChat }) {
           </p>
         </div>
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={onOpenSettings}
+            className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-zinc-700 dark:text-zinc-300 shadow-xs transition-all flex items-center gap-1.5"
+          >
+            <Icon name="sliders" className="w-3.5 h-3.5 text-purple-500" />
+            <span>API 接口配置</span>
+          </button>
           <button
             onClick={() => onNewChat()}
             className="px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-purple-600 to-primary hover:from-purple-500 hover:to-primary text-white shadow-md shadow-primary/20 transition-all flex items-center gap-2"

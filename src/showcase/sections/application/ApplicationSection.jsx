@@ -79,9 +79,11 @@ const KPIS = [
   },
 ];
 
-export default function ApplicationSection({ active }) {
+export default function ApplicationSection({ active, subView = 'overview', onSwitchSubView }) {
   const { showToast } = useToast();
-  const [activeAppView, setActiveAppView] = useState('overview'); // 'overview' | 'roles' | 'analytics' | 'audit'
+  const [internalView, setInternalView] = useState('overview');
+  const activeAppView = onSwitchSubView ? subView : internalView;
+  const setActiveAppView = onSwitchSubView || setInternalView;
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const [masterChecked, setMasterChecked] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');

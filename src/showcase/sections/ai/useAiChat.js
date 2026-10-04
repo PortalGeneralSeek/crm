@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-
-const REPLY_DELAY_MS = 1000;
+import { getStoredLlmConfig } from './AiSettingsModal';
+import { streamMockLlm, streamRealLlm } from './llmService';
 
 const INITIAL_STATE = { welcome: 'initial', welcomeHidden: false, seedThread: true, messages: [] };
 const EMPTY_STATE = { welcome: 'new', welcomeHidden: false, seedThread: false, messages: [] };
@@ -12,10 +12,10 @@ export default function useAiChat({ showToast }) {
   const containerRef = useRef(null);
   const responding = useRef(false);
   const nextKey = useRef(0);
-  const timers = useRef(new Set());
+  const activeAbort = useRef(null);
   const firstRun = useRef(true);
 
-  // The reply timer looks the message up again, so the latest state is mirrored synchronously.
+  // Synchronously mirrors the latest state
   const update = useCallback((updater) => {
     chatRef.current = updater(chatRef.current);
     setChat(chatRef.current);
@@ -31,11 +31,19 @@ export default function useAiChat({ showToast }) {
   }, [chat.messages, chat.welcome]);
 
   useLayoutEffect(() => {
-    const pending = timers.current;
-    return () => pending.forEach(clearTimeout);
+    return () => {
+      if (activeAbort.current) {
+        activeAbort.current.abort();
+      }
+    };
   }, []);
 
   const createNewChat = useCallback(() => {
+    if (activeAbort.current) {
+      activeAbort.current.abort();
+      activeAbort.current = null;
+    }
+    responding.current = false;
     update(() => EMPTY_STATE);
     showToast('已创建新对话 ✨');
   }, [showToast, update]);
@@ -48,35 +56,134 @@ export default function useAiChat({ showToast }) {
 
     const stamp = Date.now();
     const userMessage = { key: nextKey.current++, domId: `user-msg-${stamp}`, role: 'user', text };
-    const aiMessage = { key: nextKey.current++, domId: `ai-msg-${stamp}`, role: 'ai', done: false };
+    const aiMsgKey = nextKey.current++;
+    const aiMessage = {
+      key: aiMsgKey,
+      domId: `ai-msg-${stamp}`,
+      role: 'ai',
+      done: false,
+      text: '',
+      thinkingLines: [],
+      error: null,
+      startTime: stamp,
+    };
+
     update((state) => ({
       ...state,
       welcomeHidden: true,
       messages: [...state.messages, userMessage, aiMessage],
     }));
+
     input.value = '';
     responding.current = true;
 
-    const timer = setTimeout(() => {
-      timers.current.delete(timer);
-      // A "new chat" while the reply is pending removes the message; the original then
-      // returns early without releasing the lock, so the chat stays busy until reload.
-      if (!chatRef.current.messages.some((m) => m.key === aiMessage.key)) return;
-      update((state) => ({
-        ...state,
-        messages: state.messages.map((m) => (m.key === aiMessage.key ? { ...m, done: true } : m)),
-      }));
-      responding.current = false;
-    }, REPLY_DELAY_MS);
-    timers.current.add(timer);
-  }, [update]);
+    const abortController = new AbortController();
+    activeAbort.current = abortController;
+
+    const config = getStoredLlmConfig();
+
+    if (config.mode === 'real' && config.apiKey?.trim()) {
+      showToast(`正在通过 ${config.model} 实时生成响应...`, 'info');
+      streamRealLlm({
+        config,
+        messages: chatRef.current.messages,
+        signal: abortController.signal,
+        onChunk: ({ text: streamedText, reasoning }) => {
+          update((state) => ({
+            ...state,
+            messages: state.messages.map((m) =>
+              m.key === aiMsgKey
+                ? {
+                    ...m,
+                    text: streamedText,
+                    thinkingLines: reasoning ? reasoning.split('\n').filter(Boolean) : m.thinkingLines,
+                  }
+                : m
+            ),
+          }));
+        },
+        onDone: ({ text: finalText, reasoning }) => {
+          responding.current = false;
+          activeAbort.current = null;
+          update((state) => ({
+            ...state,
+            messages: state.messages.map((m) =>
+              m.key === aiMsgKey
+                ? {
+                    ...m,
+                    done: true,
+                    text: finalText,
+                    thinkingLines: reasoning ? reasoning.split('\n').filter(Boolean) : m.thinkingLines,
+                    durationMs: Date.now() - stamp,
+                  }
+                : m
+            ),
+          }));
+        },
+        onError: (err) => {
+          responding.current = false;
+          activeAbort.current = null;
+          update((state) => ({
+            ...state,
+            messages: state.messages.map((m) =>
+              m.key === aiMsgKey
+                ? {
+                    ...m,
+                    done: true,
+                    error: err.message || '大模型请求失败，请检查网络或 API 配置。',
+                  }
+                : m
+            ),
+          }));
+          showToast(`LLM 请求失败: ${err.message}`, 'error');
+        },
+      });
+    } else {
+      if (config.mode === 'real' && !config.apiKey?.trim()) {
+        showToast('未检测到 API 密钥，已切换至内置演示引擎', 'info');
+      }
+
+      streamMockLlm({
+        prompt: text,
+        signal: abortController.signal,
+        onChunk: ({ text: streamedText, thinkingLines }) => {
+          update((state) => ({
+            ...state,
+            messages: state.messages.map((m) =>
+              m.key === aiMsgKey ? { ...m, text: streamedText, thinkingLines } : m
+            ),
+          }));
+        },
+        onDone: ({ text: finalText, thinkingLines, filename, code }) => {
+          responding.current = false;
+          activeAbort.current = null;
+          update((state) => ({
+            ...state,
+            messages: state.messages.map((m) =>
+              m.key === aiMsgKey
+                ? {
+                    ...m,
+                    done: true,
+                    text: finalText,
+                    thinkingLines,
+                    filename,
+                    code,
+                    durationMs: Date.now() - stamp,
+                  }
+                : m
+            ),
+          }));
+        },
+      });
+    }
+  }, [showToast, update]);
 
   const handleSubmit = useCallback(
     (event) => {
       event?.preventDefault?.();
       sendMessage();
     },
-    [sendMessage],
+    [sendMessage]
   );
 
   const sendQuickPrompt = useCallback(
@@ -88,7 +195,7 @@ export default function useAiChat({ showToast }) {
       }
       sendMessage();
     },
-    [sendMessage],
+    [sendMessage]
   );
 
   const selectChatSession = useCallback(
@@ -96,7 +203,7 @@ export default function useAiChat({ showToast }) {
       createNewChat();
       sendQuickPrompt(`恢复会话主题：${title}`);
     },
-    [createNewChat, sendQuickPrompt],
+    [createNewChat, sendQuickPrompt]
   );
 
   return {

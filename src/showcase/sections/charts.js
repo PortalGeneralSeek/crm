@@ -1,4 +1,4 @@
-import Chart from 'chart.js/auto';
+import Chart from '../../shared/chartSetup';
 
 export function createRevenueChart(canvas, isDark) {
   const textColor = isDark ? '#a1a1aa' : '#71717a';
