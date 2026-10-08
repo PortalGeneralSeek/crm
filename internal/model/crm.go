@@ -72,3 +72,63 @@ type CrmCustomer struct {
 	CreatedAt    time.Time `json:"createdAt"`
 	UpdatedAt    time.Time `json:"updatedAt"`
 }
+
+type CrmContract struct {
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	ContractNo   string    `gorm:"size:64;uniqueIndex;not null" json:"contractNo"`
+	Title        string    `gorm:"size:128;not null" json:"title"`
+	CustomerID   uint      `gorm:"index" json:"customerId"`
+	CustomerName string    `gorm:"size:128;not null" json:"customerName"`
+	DealID       uint      `gorm:"index" json:"dealId"`
+	Amount       float64   `gorm:"type:decimal(12,2);not null" json:"amount"`
+	Status       string    `gorm:"size:32;default:'pending_approval'" json:"status"` // pending_approval, approved, active, completed, terminated
+	SignDate     string    `gorm:"size:32" json:"signDate"`
+	OwnerID      uint      `gorm:"index" json:"ownerId"`
+	OwnerName    string    `gorm:"size:64" json:"ownerName"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+}
+
+type CrmPayment struct {
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	PaymentNo     string    `gorm:"size:64;uniqueIndex;not null" json:"paymentNo"`
+	ContractID    uint      `gorm:"index" json:"contractId"`
+	ContractNo    string    `gorm:"size:64;not null" json:"contractNo"`
+	CustomerName  string    `gorm:"size:128;not null" json:"customerName"`
+	Amount        float64   `gorm:"type:decimal(12,2);not null" json:"amount"`
+	Type          string    `gorm:"size:32;not null" json:"type"` // prepayment, milestone, final
+	Status        string    `gorm:"size:32;default:'pending'" json:"status"` // pending, audited, rejected
+	PaymentDate   string    `gorm:"size:32" json:"paymentDate"`
+	InvoiceStatus string    `gorm:"size:32;default:'unissued'" json:"invoiceStatus"` // unissued, issued
+	AuditBy       string    `gorm:"size:64" json:"auditBy"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+}
+
+type CrmProduct struct {
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	ProductCode string    `gorm:"size:64;uniqueIndex;not null" json:"productCode"`
+	Name        string    `gorm:"size:128;not null" json:"name"`
+	Category    string    `gorm:"size:64;not null" json:"category"`
+	Price       float64   `gorm:"type:decimal(12,2);not null" json:"price"`
+	CostPrice   float64   `gorm:"type:decimal(12,2);not null" json:"costPrice"` // Sensitive
+	Unit        string    `gorm:"size:32;default:'套'" json:"unit"`
+	Stock       int       `gorm:"default:100" json:"stock"`
+	Status      int       `gorm:"default:1" json:"status"` // 1: active, 0: disabled
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+type SysOperationLog struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"index;not null" json:"userId"`
+	Username  string    `gorm:"size:64;not null" json:"username"`
+	RoleName  string    `gorm:"size:64" json:"roleName"`
+	Module    string    `gorm:"size:64;not null" json:"module"`
+	Action    string    `gorm:"size:64;not null" json:"action"`
+	Method    string    `gorm:"size:16" json:"method"`
+	Path      string    `gorm:"size:255" json:"path"`
+	IP        string    `gorm:"size:64" json:"ip"`
+	Details   string    `gorm:"type:text" json:"details"`
+	CreatedAt time.Time `json:"createdAt"`
+}

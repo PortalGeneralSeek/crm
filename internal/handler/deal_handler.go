@@ -23,11 +23,17 @@ func NewDealHandler() *DealHandler {
 }
 
 func (h *DealHandler) ListDeals(c *fiber.Ctx) error {
+	userID, _ := c.Locals("userId").(uint)
 	roleID, _ := c.Locals("roleId").(uint)
 	roleCode, _ := c.Locals("roleCode").(string)
 
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	pageSize, _ := strconv.Atoi(c.Query("pageSize", "50"))
+	keyword := c.Query("keyword", "")
+	stage := c.Query("stage", "")
+
 	perms := h.permService.GetUserPermissions(roleID, roleCode)
-	deals, err := h.dealService.ListDeals(perms)
+	deals, total, err := h.dealService.ListDeals(perms, page, pageSize, keyword, stage, roleCode, userID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"code":    500,
@@ -42,6 +48,10 @@ func (h *DealHandler) ListDeals(c *fiber.Ctx) error {
 		"message": "ok",
 		"data": fiber.Map{
 			"deals":            deals,
+			"list":             deals,
+			"total":            total,
+			"page":             page,
+			"pageSize":         pageSize,
 			"canViewCostPrice": canViewCost,
 			"userRole":         roleCode,
 		},
@@ -51,6 +61,7 @@ func (h *DealHandler) ListDeals(c *fiber.Ctx) error {
 func (h *DealHandler) CreateDeal(c *fiber.Ctx) error {
 	userID, _ := c.Locals("userId").(uint)
 	username, _ := c.Locals("username").(string)
+	roleCode, _ := c.Locals("roleCode").(string)
 
 	var req model.CrmDeal
 	if err := c.BodyParser(&req); err != nil {
@@ -65,7 +76,7 @@ func (h *DealHandler) CreateDeal(c *fiber.Ctx) error {
 		req.OwnerName = username
 	}
 
-	if err := h.dealService.CreateDeal(&req); err != nil {
+	if err := h.dealService.CreateDeal(&req, userID, username, roleCode, c.IP()); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"code":    400,
 			"message": err.Error(),
@@ -84,6 +95,10 @@ type AdvanceStageRequest struct {
 }
 
 func (h *DealHandler) AdvanceStage(c *fiber.Ctx) error {
+	userID, _ := c.Locals("userId").(uint)
+	username, _ := c.Locals("username").(string)
+	roleCode, _ := c.Locals("roleCode").(string)
+
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
@@ -101,7 +116,7 @@ func (h *DealHandler) AdvanceStage(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := h.dealService.AdvanceStage(uint(id), req.Stage); err != nil {
+	if err := h.dealService.AdvanceStage(uint(id), req.Stage, userID, username, roleCode, c.IP()); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"code":    400,
 			"message": err.Error(),
@@ -110,11 +125,15 @@ func (h *DealHandler) AdvanceStage(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"code":    200,
-		"message": fmt.Sprintf("商机阶段已成功推进至 [%s]", req.Stage),
+		"message": fmt.Sprintf("商机已推进至【%s】", req.Stage),
 	})
 }
 
 func (h *DealHandler) DeleteDeal(c *fiber.Ctx) error {
+	userID, _ := c.Locals("userId").(uint)
+	username, _ := c.Locals("username").(string)
+	roleCode, _ := c.Locals("roleCode").(string)
+
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
@@ -124,38 +143,33 @@ func (h *DealHandler) DeleteDeal(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := h.dealService.DeleteDeal(uint(id)); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"code":    500,
-			"message": "删除失败: " + err.Error(),
+	if err := h.dealService.DeleteDeal(uint(id), userID, username, roleCode, c.IP()); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    400,
+			"message": err.Error(),
 		})
 	}
 
 	return c.JSON(fiber.Map{
 		"code":    200,
-		"message": "商机删除成功",
+		"message": "商机已成功移除",
 	})
 }
 
 func (h *DealHandler) ExportDeals(c *fiber.Ctx) error {
-	roleID, _ := c.Locals("roleId").(uint)
+	userID, _ := c.Locals("userId").(uint)
+	username, _ := c.Locals("username").(string)
 	roleCode, _ := c.Locals("roleCode").(string)
 
-	perms := h.permService.GetUserPermissions(roleID, roleCode)
-	deals, err := h.dealService.ListDeals(perms)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"code":    500,
-			"message": "导出失败: " + err.Error(),
-		})
-	}
+	audit := service.NewAuditService()
+	audit.Record(userID, username, roleCode, "商机管理", "批量导出商机", "GET", "/api/v1/deals/export", c.IP(), "全量导出商机台账数据")
 
 	return c.JSON(fiber.Map{
 		"code":    200,
-		"message": fmt.Sprintf("成功导出 %d 条商机数据快照", len(deals)),
+		"message": "商机导出任务已提交生成，请稍后下载 CSV 文件",
 		"data": fiber.Map{
-			"count": len(deals),
-			"rows":  deals,
+			"exportedBy": username,
+			"exportUrl":  "/exports/deals_2026.csv",
 		},
 	})
 }

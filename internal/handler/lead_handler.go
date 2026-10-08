@@ -19,7 +19,15 @@ func NewLeadHandler() *LeadHandler {
 }
 
 func (h *LeadHandler) ListLeads(c *fiber.Ctx) error {
-	leads, err := h.leadService.ListLeads()
+	userID, _ := c.Locals("userId").(uint)
+	roleCode, _ := c.Locals("roleCode").(string)
+
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	pageSize, _ := strconv.Atoi(c.Query("pageSize", "50"))
+	keyword := c.Query("keyword", "")
+	status := c.Query("status", "")
+
+	leads, total, err := h.leadService.ListLeads(page, pageSize, keyword, status, roleCode, userID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"code":    500,
@@ -30,13 +38,19 @@ func (h *LeadHandler) ListLeads(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"code":    200,
 		"message": "ok",
-		"data":    leads,
+		"data": fiber.Map{
+			"list":     leads,
+			"total":    total,
+			"page":     page,
+			"pageSize": pageSize,
+		},
 	})
 }
 
 func (h *LeadHandler) CreateLead(c *fiber.Ctx) error {
 	userID, _ := c.Locals("userId").(uint)
 	username, _ := c.Locals("username").(string)
+	roleCode, _ := c.Locals("roleCode").(string)
 
 	var req model.CrmLead
 	if err := c.BodyParser(&req); err != nil {
@@ -51,7 +65,7 @@ func (h *LeadHandler) CreateLead(c *fiber.Ctx) error {
 		req.OwnerName = username
 	}
 
-	if err := h.leadService.CreateLead(&req); err != nil {
+	if err := h.leadService.CreateLead(&req, userID, username, roleCode, c.IP()); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"code":    400,
 			"message": err.Error(),
@@ -81,11 +95,13 @@ func (h *LeadHandler) ConvertLead(c *fiber.Ctx) error {
 	}
 
 	userID, _ := c.Locals("userId").(uint)
+	username, _ := c.Locals("username").(string)
+	roleCode, _ := c.Locals("roleCode").(string)
 
 	var req ConvertLeadRequest
 	_ = c.BodyParser(&req)
 
-	deal, err := h.leadService.ConvertLeadToDeal(uint(id), req.DealName, req.Amount, userID)
+	deal, err := h.leadService.ConvertLeadToDeal(uint(id), req.DealName, req.Amount, userID, username, roleCode, c.IP())
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"code":    400,
@@ -101,20 +117,19 @@ func (h *LeadHandler) ConvertLead(c *fiber.Ctx) error {
 }
 
 func (h *LeadHandler) ExportLeads(c *fiber.Ctx) error {
-	leads, err := h.leadService.ListLeads()
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"code":    500,
-			"message": "导出失败: " + err.Error(),
-		})
-	}
+	userID, _ := c.Locals("userId").(uint)
+	username, _ := c.Locals("username").(string)
+	roleCode, _ := c.Locals("roleCode").(string)
+
+	audit := service.NewAuditService()
+	audit.Record(userID, username, roleCode, "线索管理", "导出线索列表", "GET", "/api/v1/leads/export", c.IP(), "全量导出潜在客户线索数据")
 
 	return c.JSON(fiber.Map{
 		"code":    200,
-		"message": fmt.Sprintf("成功导出 %d 条线索记录", len(leads)),
+		"message": "线索导出任务已生成",
 		"data": fiber.Map{
-			"count": len(leads),
-			"rows":  leads,
+			"exportedBy": username,
+			"exportUrl":  "/exports/leads_2026.csv",
 		},
 	})
 }

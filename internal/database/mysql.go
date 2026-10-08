@@ -47,11 +47,16 @@ func InitMySQL(cfg *config.Config) (*gorm.DB, error) {
 	err = db.AutoMigrate(
 		&model.SysRole{},
 		&model.SysUser{},
+		&model.SysUserRole{},
 		&model.SysMenu{},
 		&model.SysRolePermission{},
 		&model.CrmLead{},
 		&model.CrmDeal{},
 		&model.CrmCustomer{},
+		&model.CrmContract{},
+		&model.CrmPayment{},
+		&model.CrmProduct{},
+		&model.SysOperationLog{},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("database auto-migration failed: %w", err)

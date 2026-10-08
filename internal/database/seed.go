@@ -11,10 +11,12 @@ import (
 )
 
 func SeedData(db *gorm.DB) error {
+	defer seedBusinessTables(db)
+
 	var count int64
 	db.Model(&model.SysRole{}).Count(&count)
 	if count > 0 {
-		log.Println("[Database] Seed data already exists, skipping initialization.")
+		log.Println("[Database] Seed data already exists, checking business tables...")
 		return nil
 	}
 
@@ -286,6 +288,71 @@ func SeedData(db *gorm.DB) error {
 		db.FirstOrCreate(&c, model.CrmCustomer{ID: c.ID})
 	}
 
+	seedBusinessTables(db)
+
 	log.Println("[Database] Seed data successfully committed.")
 	return nil
+}
+
+func seedBusinessTables(db *gorm.DB) {
+	// 8. Seed Contracts
+	var contractCount int64
+	db.Model(&model.CrmContract{}).Count(&contractCount)
+	if contractCount == 0 {
+		contracts := []model.CrmContract{
+			{ID: 1, ContractNo: "CT-2026-001", Title: "大华股份 视觉AI私有化部署合同", CustomerID: 1, CustomerName: "大华技术股份有限公司", DealID: 1, Amount: 2400000.00, Status: "pending_approval", SignDate: "2026-10-15", OwnerID: 2, OwnerName: "陈明"},
+			{ID: 2, ContractNo: "CT-2026-002", Title: "比亚迪 电池产线质检边缘一体机采购合同", CustomerID: 1, CustomerName: "比亚迪股份有限公司", DealID: 2, Amount: 1850000.00, Status: "approved", SignDate: "2026-09-20", OwnerID: 3, OwnerName: "林雪"},
+			{ID: 3, ContractNo: "CT-2026-003", Title: "顺丰科技 智能仓储物流调度引擎采购", CustomerID: 3, CustomerName: "顺丰速运集团", DealID: 3, Amount: 960000.00, Status: "active", SignDate: "2026-09-10", OwnerID: 2, OwnerName: "陈明"},
+			{ID: 4, ContractNo: "CT-2026-004", Title: "宁德时代 极限制造AI质检二期系统采购", CustomerID: 2, CustomerName: "宁德时代新能源科技", DealID: 4, Amount: 3200000.00, Status: "completed", SignDate: "2026-08-15", OwnerID: 2, OwnerName: "陈明"},
+		}
+		for _, c := range contracts {
+			db.FirstOrCreate(&c, model.CrmContract{ID: c.ID})
+		}
+		log.Printf("[Database] Seeded %d contracts", len(contracts))
+	}
+
+	// 9. Seed Payments
+	var paymentCount int64
+	db.Model(&model.CrmPayment{}).Count(&paymentCount)
+	if paymentCount == 0 {
+		payments := []model.CrmPayment{
+			{ID: 1, PaymentNo: "PM-2026-001", ContractID: 2, ContractNo: "CT-2026-002", CustomerName: "比亚迪股份有限公司", Amount: 925000.00, Type: "prepayment", Status: "audited", PaymentDate: "2026-09-25", InvoiceStatus: "issued", AuditBy: "钱多多 (财务合规审计员)"},
+			{ID: 2, PaymentNo: "PM-2026-002", ContractID: 3, ContractNo: "CT-2026-003", CustomerName: "顺丰速运集团", Amount: 480000.00, Type: "prepayment", Status: "audited", PaymentDate: "2026-09-18", InvoiceStatus: "issued", AuditBy: "钱多多 (财务合规审计员)"},
+			{ID: 3, PaymentNo: "PM-2026-003", ContractID: 1, ContractNo: "CT-2026-001", CustomerName: "大华技术股份有限公司", Amount: 1200000.00, Type: "prepayment", Status: "pending", PaymentDate: "2026-10-08", InvoiceStatus: "unissued", AuditBy: ""},
+			{ID: 4, PaymentNo: "PM-2026-004", ContractID: 4, ContractNo: "CT-2026-004", CustomerName: "宁德时代新能源科技", Amount: 1600000.00, Type: "milestone", Status: "audited", PaymentDate: "2026-09-30", InvoiceStatus: "issued", AuditBy: "钱多多 (财务合规审计员)"},
+		}
+		for _, p := range payments {
+			db.FirstOrCreate(&p, model.CrmPayment{ID: p.ID})
+		}
+		log.Printf("[Database] Seeded %d payments", len(payments))
+	}
+
+	// 10. Seed Products
+	var productCount int64
+	db.Model(&model.CrmProduct{}).Count(&productCount)
+	if productCount == 0 {
+		products := []model.CrmProduct{
+			{ID: 1, ProductCode: "PRD-AI-01", Name: "领航 AI 行业大模型私有化底座", Category: "软件平台", Price: 800000.00, CostPrice: 320000.00, Unit: "套", Stock: 999, Status: 1},
+			{ID: 2, ProductCode: "PRD-BOX-02", Name: "边缘算力工控一体机 Pro (8卡)", Category: "硬件算力", Price: 150000.00, CostPrice: 85000.00, Unit: "台", Stock: 45, Status: 1},
+			{ID: 3, ProductCode: "PRD-SVC-03", Name: "大模型算法微调与数据标注交付服务", Category: "专业服务", Price: 250000.00, CostPrice: 110000.00, Unit: "人月", Stock: 100, Status: 1},
+			{ID: 4, ProductCode: "PRD-SUB-04", Name: "企业销售智能体 SaaS 年费授权 (标准版)", Category: "订阅服务", Price: 68000.00, CostPrice: 12000.00, Unit: "企业/年", Stock: 999, Status: 1},
+		}
+		for _, p := range products {
+			db.FirstOrCreate(&p, model.CrmProduct{ID: p.ID})
+		}
+		log.Printf("[Database] Seeded %d products", len(products))
+	}
+
+	// 11. Seed sample audit logs
+	var logCount int64
+	db.Model(&model.SysOperationLog{}).Count(&logCount)
+	if logCount == 0 {
+		logs := []model.SysOperationLog{
+			{UserID: 1, Username: "admin", RoleName: "超级管理员", Module: "角色权限", Action: "初始化系统59项RBAC权限节点", Method: "SYSTEM", Path: "/internal/seed", IP: "127.0.0.1", Details: "系统初始化载入全部菜单与操作按钮权限", CreatedAt: time.Now().Add(-2 * time.Hour)},
+			{UserID: 2, Username: "director", RoleName: "销售总监", Module: "商机管理", Action: "审批大华股份底价折扣特批", Method: "PUT", Path: "/api/v1/deals/1/stage", IP: "192.168.1.108", Details: "特批毛利率底线 35%，批准推进至商务谈判阶段", CreatedAt: time.Now().Add(-1 * time.Hour)},
+		}
+		for _, l := range logs {
+			db.Create(&l)
+		}
+	}
 }

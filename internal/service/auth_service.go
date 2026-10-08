@@ -181,3 +181,49 @@ func (s *AuthService) SwitchRole(userID uint, targetRoleID uint) (*LoginResult, 
 		Menus:       menus,
 	}, nil
 }
+
+// UpdateProfile updates personal information of user
+func (s *AuthService) UpdateProfile(userID uint, realName, email, phone string) (*model.SysUser, error) {
+	var user model.SysUser
+	if err := database.DB.Preload("Role").First(&user, userID).Error; err != nil {
+		return nil, errors.New("用户不存在")
+	}
+
+	if realName != "" {
+		user.RealName = realName
+	}
+	user.Email = email
+	user.Phone = phone
+	user.UpdatedAt = time.Now()
+
+	if err := database.DB.Save(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// ChangePassword allows authenticated user to change their password securely
+func (s *AuthService) ChangePassword(userID uint, oldPassword, newPassword string) error {
+	if len(newPassword) < 6 {
+		return errors.New("新密码长度不能少于 6 位")
+	}
+
+	var user model.SysUser
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		return errors.New("用户不存在")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(oldPassword)); err != nil {
+		return errors.New("原密码验证失败，请核对后重试")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New("密码加密失败: " + err.Error())
+	}
+
+	user.PasswordHash = string(hash)
+	user.UpdatedAt = time.Now()
+
+	return database.DB.Save(&user).Error
+}
