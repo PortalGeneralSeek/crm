@@ -23,6 +23,7 @@ const Products = lazy(() => import('./modules/Products'));
 const Leaderboard = lazy(() => import('./modules/Leaderboard'));
 const Analytics = lazy(() => import('./modules/Analytics'));
 const AiCopilot = lazy(() => import('./modules/AiCopilot'));
+const Settings = lazy(() => import('./modules/Settings'));
 
 function ModuleSkeleton() {
   return (
@@ -233,6 +234,7 @@ function Workspace() {
               {isActive('leaderboard') && <Leaderboard active={true} />}
               {isActive('analytics') && <Analytics active={true} isDark={isDark} />}
               {isActive('ai-copilot') && <AiCopilot active={true} />}
+              {isActive('settings') && <Settings active={true} />}
             </Suspense>
           </main>
         </div>

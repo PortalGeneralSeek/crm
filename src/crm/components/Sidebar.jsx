@@ -15,6 +15,7 @@ const DEFAULT_MENUS = [
   { id: 8, title: '战区业绩排行榜', name: 'leaderboard', path: '/leaderboard', icon: 'trophy', badge: 'TOP 1' },
   { id: 9, title: '销售 BI 商业智能', name: 'analytics', path: '/analytics', icon: 'pie-chart' },
   { id: 10, title: '销售 AI 助理', name: 'ai-copilot', path: '/ai', icon: 'bot', badge: 'Beta' },
+  { id: 11, title: '系统与成员权限', name: 'settings', path: '/settings', icon: 'shield-check', badge: 'Admin' },
 ];
 
 const PRESET_USERS = [

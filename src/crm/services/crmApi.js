@@ -85,6 +85,12 @@ export function useAuth() {
     canApproveDiscount: hasPermission('btn:deal:approve_discount'),
     canAddDeal: hasPermission('btn:deal:add'),
     canConvertLead: hasPermission('btn:lead:convert'),
+    canAddUser: hasPermission('btn:user:add'),
+    canEditUser: hasPermission('btn:user:edit'),
+    canAssignRole: hasPermission('btn:role:assign'),
+    canDeleteUser: hasPermission('btn:user:delete'),
+    canManageRoles: hasPermission('btn:role:edit'),
+    canAddRole: hasPermission('btn:role:add'),
   };
 }
 
@@ -180,5 +186,89 @@ export const crmApi = {
 
   exportLeads: async () => {
     return request('/api/v1/leads/export');
+  },
+
+  // User Management
+  getUsers: async (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.keyword) q.set('keyword', params.keyword);
+    if (params.roleId) q.set('roleId', params.roleId);
+    if (params.status !== undefined && params.status !== '') q.set('status', params.status);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return request(`/api/v1/users${qs}`);
+  },
+
+  createUser: async (userData) => {
+    return request('/api/v1/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  },
+
+  updateUser: async (id, userData) => {
+    return request(`/api/v1/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  },
+
+  updateUserStatus: async (id, status) => {
+    return request(`/api/v1/users/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  resetUserPassword: async (id, newPassword) => {
+    return request(`/api/v1/users/${id}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ newPassword }),
+    });
+  },
+
+  deleteUser: async (id) => {
+    return request(`/api/v1/users/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Role & Permissions Matrix
+  getRoles: async () => {
+    return request('/api/v1/roles');
+  },
+
+  createRole: async (roleData) => {
+    return request('/api/v1/roles', {
+      method: 'POST',
+      body: JSON.stringify(roleData),
+    });
+  },
+
+  updateRole: async (id, roleData) => {
+    return request(`/api/v1/roles/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(roleData),
+    });
+  },
+
+  deleteRole: async (id) => {
+    return request(`/api/v1/roles/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  getRolePermissions: async (roleId) => {
+    return request(`/api/v1/roles/${roleId}/permissions`);
+  },
+
+  updateRolePermissions: async (roleId, menuIds) => {
+    return request(`/api/v1/roles/${roleId}/permissions`, {
+      method: 'PUT',
+      body: JSON.stringify({ menuIds }),
+    });
+  },
+
+  getPermissionsTree: async () => {
+    return request('/api/v1/permissions/tree');
   },
 };
