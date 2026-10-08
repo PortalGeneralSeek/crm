@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Icon from '../../shared/Icon';
 import { useAuth, crmApi } from '../services/crmApi';
 import { useToast } from '../hooks/useToast';
+import RoleDropdown from './RoleDropdown';
 
 // Default static menu fallback if user is not yet authenticated
 const DEFAULT_MENUS = [
@@ -128,44 +129,14 @@ export default function Sidebar({
               </div>
             </div>
 
-            {/* Multi-role Switcher Dropdown (切换身份下拉选) */}
-            {auth.roles && auth.roles.length > 1 ? (
-              <div className="pt-2 border-t border-zinc-200/60 dark:border-zinc-800/60">
-                <div className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 flex items-center justify-between">
-                  <span className="flex items-center gap-1">
-                    <Icon name="users" className="w-3 h-3 text-brand-500" />
-                    <span>切换身份 ({auth.roles.length})</span>
-                  </span>
-                  {switching && <span className="animate-spin text-brand-500 text-xs">⟳</span>}
-                </div>
-                <div className="relative">
-                  <select
-                    id="sidebar-role-select"
-                    value={auth.role?.id}
-                    disabled={switching}
-                    onChange={(e) => handleSwitchRole(Number(e.target.value))}
-                    className="w-full appearance-none bg-white dark:bg-zinc-800/90 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-2.5 py-1.5 pr-7 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:border-brand-500/70 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 cursor-pointer shadow-xs transition-colors disabled:opacity-60"
-                    title="选择切换当前工作身份角色"
-                  >
-                    {auth.roles.map((r) => (
-                      <option key={r.id} value={r.id} className="bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 py-1">
-                        {r.name} {r.id === auth.role?.id ? ' (当前)' : ''}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-400">
-                    <Icon name="chevrons-up-down" className="w-3.5 h-3.5" />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="pt-2 border-t border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between text-[11px]">
-                <span className="text-zinc-400">当前身份</span>
-                <span className="font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-200/60 dark:bg-zinc-800 px-2 py-0.5 rounded-lg text-[10px]">
-                  {auth.role?.name || '普通成员'}
-                </span>
-              </div>
-            )}
+            {/* Custom Styled Role Dropdown (自定义美化身份切换下拉选) */}
+            <RoleDropdown
+              roles={auth.roles}
+              currentRole={auth.role}
+              onSelect={handleSwitchRole}
+              loading={switching}
+              variant="sidebar"
+            />
           </div>
         ) : (
           /* Collapsed Mini Avatar Header */
