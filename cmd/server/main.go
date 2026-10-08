@@ -96,6 +96,7 @@ func main() {
 	// Auth & Dynamic Menus
 	protected.Get("/auth/me", authH.GetCurrentUser)
 	protected.Get("/auth/menus", authH.GetDynamicMenus)
+	protected.Post("/auth/switch-role", authH.SwitchRole)
 
 	// Deals (with Sensitive Price Masking & Button Permissions)
 	protected.Get("/deals", dealH.ListDeals)

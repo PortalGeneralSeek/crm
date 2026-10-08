@@ -93,3 +93,39 @@ func (h *AuthHandler) GetDynamicMenus(c *fiber.Ctx) error {
 		"data":    tree,
 	})
 }
+
+type SwitchRoleRequest struct {
+	RoleID uint `json:"roleId"`
+}
+
+func (h *AuthHandler) SwitchRole(c *fiber.Ctx) error {
+	userID, _ := c.Locals("userId").(uint)
+	if userID == 0 {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"code":    401,
+			"message": "请先登录认证",
+		})
+	}
+
+	var req SwitchRoleRequest
+	if err := c.BodyParser(&req); err != nil || req.RoleID == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    400,
+			"message": "请指定要切换的目标角色 ID",
+		})
+	}
+
+	result, err := h.authService.SwitchRole(userID, req.RoleID)
+	if err != nil {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"code":    403,
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"code":    200,
+		"message": "角色身份已成功切换",
+		"data":    result,
+	})
+}
