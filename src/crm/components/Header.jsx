@@ -337,14 +337,14 @@ export default function Header({
             )}
           </button>
         )}
-        {/* Custom Styled Role Dropdown in Header (自定义美化身份切换下拉选) */}
+        {/* Custom Styled Role Dropdown in Header (右上角身份切换下拉选) */}
         <RoleDropdown
           roles={auth.roles}
           currentRole={auth.role}
           onSelect={handleRoleSwitch}
           loading={switchingRole}
           variant="header"
-          className="hidden sm:block"
+          className="flex items-center"
         />
 
         {/* User Profile Pill */}
