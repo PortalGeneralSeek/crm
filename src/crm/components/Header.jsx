@@ -4,6 +4,7 @@ import { useToast } from '../hooks/useToast';
 import { useCrmStore } from '../store/crmStore';
 import { useAuth, crmApi } from '../services/crmApi';
 import RoleDropdown from './RoleDropdown';
+import ProfileModal from './ProfileModal';
 
 export default function Header({
   title,
@@ -27,6 +28,7 @@ export default function Header({
   const [searchResults, setSearchResults] = useState(null);
   const [showResults, setShowResults] = useState(false);
   const [switchingRole, setSwitchingRole] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const searchContainerRef = useRef(null);
 
   const handleRoleSwitch = async (targetRoleId) => {
@@ -348,35 +350,49 @@ export default function Header({
         />
 
         {/* User Profile Pill */}
-        <div className="flex items-center gap-2.5 pl-2 border-l border-zinc-200 dark:border-zinc-800">
-          <div className="relative">
-            <img
-              src={
-                auth.user?.avatar ||
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80'
-              }
-              alt="Avatar"
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-brand-500/20"
-            />
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
-          </div>
-          <div className="hidden sm:block text-left">
-            <div className="text-xs font-bold leading-none text-zinc-900 dark:text-zinc-100 truncate max-w-[120px]">
-              {auth.user?.realName || '未登录'}
+        <div className="flex items-center gap-2 pl-2 border-l border-zinc-200 dark:border-zinc-800">
+          <button
+            type="button"
+            onClick={() => setProfileOpen(true)}
+            className="flex items-center gap-2 p-1 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-colors text-left group"
+            title="点击查看个人资料与修改密码"
+          >
+            <div className="relative">
+              <img
+                src={
+                  auth.user?.avatar ||
+                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80'
+                }
+                alt="Avatar"
+                className="w-8 h-8 rounded-full object-cover ring-2 ring-brand-500/20 group-hover:ring-brand-500/40 transition-all"
+              />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
             </div>
-            <div className="text-[10px] text-zinc-400 mt-0.5 truncate max-w-[120px]">
-              {auth.user?.username || '用户'}
+            <div className="hidden sm:block text-left">
+              <div className="text-xs font-bold leading-none text-zinc-900 dark:text-zinc-100 truncate max-w-[120px] group-hover:text-brand-600 dark:group-hover:text-blue-400 transition-colors">
+                {auth.user?.realName || '未登录'}
+              </div>
+              <div className="text-[10px] text-zinc-400 mt-0.5 truncate max-w-[120px]">
+                {auth.user?.username || '用户'} · 资料
+              </div>
             </div>
-          </div>
+          </button>
           <button
             onClick={onLogout}
-            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            title="退出登录"
+            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title="安全退出登录"
           >
             <Icon name="log-out" className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+      {/* Profile & Password Change Modal */}
+      <ProfileModal
+        isOpen={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        onLogout={onLogout}
+      />
     </header>
   );
 }

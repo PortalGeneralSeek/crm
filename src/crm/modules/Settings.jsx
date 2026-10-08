@@ -23,11 +23,19 @@ export default function Settings({ active }) {
   const showToast = useToast();
   const auth = useAuth();
 
-  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'roles'
+  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'roles' | 'audit'
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [permTree, setPermTree] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Audit Logs State
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditTotal, setAuditTotal] = useState(0);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditKeyword, setAuditKeyword] = useState('');
+  const [auditModule, setAuditModule] = useState('');
+  const [auditPage, setAuditPage] = useState(1);
 
   // Filters
   const [keyword, setKeyword] = useState('');
@@ -112,6 +120,34 @@ export default function Settings({ active }) {
         console.error(err);
       });
   }, [selectedRoleId]);
+
+  // Load audit logs
+  const loadAuditLogs = async () => {
+    setAuditLoading(true);
+    try {
+      const res = await crmApi.getAuditLogs({
+        page: auditPage,
+        pageSize: 20,
+        keyword: auditKeyword.trim(),
+        module: auditModule,
+      });
+      if (res.data) {
+        setAuditLogs(res.data.list || []);
+        setAuditTotal(res.data.total || 0);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(`获取审计日志失败: ${err.message}`, 'error');
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (active && activeTab === 'audit') {
+      loadAuditLogs();
+    }
+  }, [active, activeTab, auditPage, auditKeyword, auditModule]);
 
   // Filtered users
   const filteredUsers = useMemo(() => {
@@ -413,6 +449,18 @@ export default function Settings({ active }) {
             <Icon name="lock" className="w-4 h-4" />
             <span>角色权限矩阵配置 ({roles.length})</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('audit')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'audit'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+            }`}
+          >
+            <Icon name="file-text" className="w-4 h-4" />
+            <span>操作安全审计日志 ({auditTotal})</span>
+          </button>
         </div>
 
         {/* Action Button based on tab */}
@@ -447,6 +495,17 @@ export default function Settings({ active }) {
           >
             <Icon name="plus" className="w-4 h-4" />
             <span>新建自定义角色</span>
+          </button>
+        )}
+
+        {activeTab === 'audit' && (
+          <button
+            type="button"
+            onClick={loadAuditLogs}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors shadow-xs"
+          >
+            <Icon name="refresh-cw" className={`w-3.5 h-3.5 ${auditLoading ? 'animate-spin' : ''}`} />
+            <span>刷新审计流水</span>
           </button>
         )}
       </div>
@@ -862,6 +921,161 @@ export default function Settings({ active }) {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= Tab 3: 操作安全审计日志 ================= */}
+      {activeTab === 'audit' && (
+        <div className="space-y-4">
+          {/* Filters Bar */}
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 border border-zinc-200/80 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+            <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+              <div className="relative flex-1 min-w-[200px] max-w-sm">
+                <Icon
+                  name="search"
+                  className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"
+                />
+                <input
+                  type="text"
+                  value={auditKeyword}
+                  onChange={(e) => {
+                    setAuditKeyword(e.target.value);
+                    setAuditPage(1);
+                  }}
+                  placeholder="搜索操作人、动作或明细详情..."
+                  className="w-full pl-9 pr-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none focus:border-brand-500"
+                />
+              </div>
+
+              <select
+                value={auditModule}
+                onChange={(e) => {
+                  setAuditModule(e.target.value);
+                  setAuditPage(1);
+                }}
+                className="px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none focus:border-brand-500 cursor-pointer text-zinc-700 dark:text-zinc-300"
+              >
+                <option value="">全部业务模块</option>
+                <option value="认证服务">认证服务 (Auth)</option>
+                <option value="商机管理">商机管理 (Deals)</option>
+                <option value="线索管理">线索管理 (Leads)</option>
+                <option value="客户管理">客户管理 (Customers)</option>
+                <option value="合同管理">合同管理 (Contracts)</option>
+                <option value="回款管理">回款管理 (Payments)</option>
+                <option value="产品管理">产品管理 (Products)</option>
+                <option value="用户管理">用户管理 (Users)</option>
+                <option value="权限管理">权限管理 (RBAC)</option>
+                <option value="AI 智能体">AI 销售智能体 (Copilot)</option>
+              </select>
+            </div>
+
+            <div className="text-xs text-zinc-400">
+              共记录审计操作流水: <span className="font-bold text-brand-600 font-mono">{auditTotal}</span> 条
+            </div>
+          </div>
+
+          {/* Audit Logs Table */}
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 overflow-hidden shadow-xs">
+            {auditLoading ? (
+              <div className="py-16 text-center text-xs text-zinc-400">
+                <Icon name="loader" className="w-5 h-5 mx-auto mb-2 animate-spin text-brand-500" />
+                正在加载系统操作安全审计日志...
+              </div>
+            ) : auditLogs.length === 0 ? (
+              <div className="py-16 text-center text-xs text-zinc-400">
+                <Icon name="shield-check" className="w-6 h-6 mx-auto mb-2 text-zinc-300" />
+                暂无符合条件的审计日志记录
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-zinc-50/70 dark:bg-zinc-800/40 text-zinc-400 border-b border-zinc-200/80 dark:border-zinc-800 uppercase font-semibold">
+                    <tr>
+                      <th className="py-3 px-4">操作时间</th>
+                      <th className="py-3 px-4">操作人 (账号 / 角色)</th>
+                      <th className="py-3 px-4">业务模块</th>
+                      <th className="py-3 px-4">操作动作</th>
+                      <th className="py-3 px-4">请求路由</th>
+                      <th className="py-3 px-4">来源 IP</th>
+                      <th className="py-3 px-4">操作详情摘要</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+                    {auditLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/30 transition-colors">
+                        <td className="py-3 px-4 font-mono text-zinc-500 whitespace-nowrap">
+                          {log.createdAt ? new Date(log.createdAt).toLocaleString('zh-CN', { hour12: false }) : '-'}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <div className="font-bold text-zinc-900 dark:text-zinc-100">
+                            {log.username}
+                          </div>
+                          <div className="text-[10px] text-zinc-400 font-medium">
+                            {log.roleName || '系统用户'}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-brand-50 dark:bg-blue-950/60 text-brand-600 dark:text-blue-400 border border-brand-500/20">
+                            {log.module}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap">
+                          {log.action}
+                        </td>
+                        <td className="py-3 px-4 font-mono text-[11px] whitespace-nowrap">
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold mr-1.5 ${
+                              log.method === 'POST'
+                                ? 'bg-emerald-500/10 text-emerald-600'
+                                : log.method === 'PUT'
+                                ? 'bg-amber-500/10 text-amber-600'
+                                : log.method === 'DELETE'
+                                ? 'bg-rose-500/10 text-rose-600'
+                                : 'bg-blue-500/10 text-blue-600'
+                            }`}
+                          >
+                            {log.method}
+                          </span>
+                          <span className="text-zinc-500">{log.path}</span>
+                        </td>
+                        <td className="py-3 px-4 font-mono text-zinc-500 whitespace-nowrap">
+                          {log.ip || '127.0.0.1'}
+                        </td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-300 max-w-xs truncate" title={log.details}>
+                          {log.details || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {auditTotal > 20 && (
+              <div className="p-3 border-t border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
+                <div>
+                  第 <span className="font-bold text-zinc-800 dark:text-zinc-200">{auditPage}</span> 页 / 共 {Math.ceil(auditTotal / 20)} 页
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={auditPage <= 1}
+                    onClick={() => setAuditPage((p) => Math.max(1, p - 1))}
+                    className="px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40"
+                  >
+                    上一页
+                  </button>
+                  <button
+                    disabled={auditPage >= Math.ceil(auditTotal / 20)}
+                    onClick={() => setAuditPage((p) => p + 1)}
+                    className="px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40"
+                  >
+                    下一页
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

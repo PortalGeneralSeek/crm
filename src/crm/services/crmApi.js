@@ -284,4 +284,142 @@ export const crmApi = {
   getPermissionsTree: async () => {
     return request('/api/v1/permissions/tree');
   },
+
+  // Profile & Password
+  updateProfile: async (profileData) => {
+    return request('/api/v1/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  },
+
+  changePassword: async (oldPassword, newPassword) => {
+    return request('/api/v1/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ oldPassword, newPassword }),
+    });
+  },
+
+  // Customers API
+  getCustomers: async (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/v1/customers${qs ? `?${qs}` : ''}`);
+  },
+
+  createCustomer: async (customerData) => {
+    return request('/api/v1/customers', {
+      method: 'POST',
+      body: JSON.stringify(customerData),
+    });
+  },
+
+  updateCustomer: async (id, customerData) => {
+    return request(`/api/v1/customers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(customerData),
+    });
+  },
+
+  deleteCustomer: async (id) => {
+    return request(`/api/v1/customers/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Contracts API
+  getContracts: async (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/v1/contracts${qs ? `?${qs}` : ''}`);
+  },
+
+  createContract: async (contractData) => {
+    return request('/api/v1/contracts', {
+      method: 'POST',
+      body: JSON.stringify(contractData),
+    });
+  },
+
+  approveContract: async (id) => {
+    return request(`/api/v1/contracts/${id}/approve`, {
+      method: 'PUT',
+    });
+  },
+
+  updateContract: async (id, contractData) => {
+    return request(`/api/v1/contracts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(contractData),
+    });
+  },
+
+  deleteContract: async (id) => {
+    return request(`/api/v1/contracts/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Payments API
+  getPayments: async (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/v1/payments${qs ? `?${qs}` : ''}`);
+  },
+
+  createPayment: async (paymentData) => {
+    return request('/api/v1/payments', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+  },
+
+  auditPayment: async (id) => {
+    return request(`/api/v1/payments/${id}/audit`, {
+      method: 'PUT',
+    });
+  },
+
+  issueInvoice: async (id) => {
+    return request(`/api/v1/payments/${id}/invoice`, {
+      method: 'PUT',
+    });
+  },
+
+  // Products API
+  getProducts: async (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/v1/products${qs ? `?${qs}` : ''}`);
+  },
+
+  createProduct: async (productData) => {
+    return request('/api/v1/products', {
+      method: 'POST',
+      body: JSON.stringify(productData),
+    });
+  },
+
+  updateProduct: async (id, productData) => {
+    return request(`/api/v1/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(productData),
+    });
+  },
+
+  deleteProduct: async (id) => {
+    return request(`/api/v1/products/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Audit Logs
+  getAuditLogs: async (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/v1/audit/logs${qs ? `?${qs}` : ''}`);
+  },
+
+  // AI Copilot
+  chatAi: async (prompt) => {
+    return request('/api/v1/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ prompt }),
+    });
+  },
 };

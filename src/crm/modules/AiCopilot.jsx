@@ -1,78 +1,66 @@
 import { useRef, useState } from 'react';
 import Icon from '../../shared/Icon';
+import { crmApi, useAuth } from '../services/crmApi';
 import { useToast } from '../hooks/useToast';
 
 const PROMPTS = {
-  meeting:
-    '今天与大华股份技术VP孙总及采购处进行商务复盘。客户主要关心：1. 视频流解析时吞吐是否有丢帧；2. 首付款能否降低至 40%；3. 能否在下周三安排2名工程师驻场。',
-  pitch:
-    '面对顺丰科技提及某友商报价比我们低 15% 并承诺赠送二期算力，销售应该如何进行差异化价值防守？',
-  research: '请检索并输出 蔚来汽车 (NIO) 最新智能座舱软件招投标动态与主要决策人背景矩阵。',
+  deals: '帮我全面分析当前 CRM 中的商机推进进度、漏斗健康度与业绩预期。',
+  contracts: '排查当前系统中所有待总监审批签署的合同清单与法务履约风控建议。',
+  customer: '为大华股份/海康威视等战略重点大客户量身定制商务投标与跟进突破方案。',
+  defense: '面对客户提出友商报价低 15% 并承诺赠送二期算力，销售应如何进行差异化价值防守？',
 };
 
-const MEETING_RESULT = `【AI 拜访纪要萃取 & CRM 自动归档字段】
-• 客户主体：浙江大华技术股份有限公司
-• 关键联系人：孙志宏 (技术VP)
-• 商务诉求：要求调整首付比例至 40% (当前为 50%)
-• 技术痛点：高吞吐低延迟与避免丢帧 SLA
-• 建议策略：
-  1. 同意首付 45% 折中方案，但要求缩短验收测试周期为 10 个工作日；
-  2. 承诺提供 2 名驻场专家，并写入正式合同服务附件。
-• 赢单概率：92% ↑ (建议发起总监特批合同流程)`;
-
-const PITCH_RESULT = `【AI 竞对防御策略卡片】
-1. 算力成本陷阱：友商虽然赠送二期算力，但采用专有封闭协议，后续扩展硬件费用将高出 40%；
-2. 稳定性背书：我司在理想汽车与微盟均有实际亿级并发线上经验，故障恢复时间 < 30 秒；
-3. 话术推荐：“林总，采购系统就像买车，省下 15% 的初装费，如果因为高峰期延迟导致调度停滞，每小时损失远超数十万。领航提供的是 7×24 驻场确定性。”`;
-
-const RESEARCH_RESULT = `【AI 潜客 360° 深度背调简报】
-• 企业主体：蔚来汽车 (NIO Inc.)
-• 决策链关键人：智能座舱副总裁、车联网采购高级总监
-• 最新动态：Q2 财报披露座舱 AI 多模态交互研发预算同比增长 45%
-• 推荐破局点：从车内语音降噪大模型插件切入，建议协同售前架构师预约线上 PoC。`;
-
-const LOADING_RESULT = '领航销售大模型正在深度解析并重构 CRM 商业洞察，请稍候...';
-
-// Matches the whitespace of the static markup, which is significant under whitespace-pre-wrap.
-const INITIAL_RESULT =
-  '\n【领航 AI 已就绪】\n请在左侧选择快捷指令，或输入任何大客户跟进情况。\nAI 将为您即刻生成：\n1. 规范化 CRM 商机跟进纪要\n2. 赢单概率评估与风险诊断\n3. 下一步精准触达策略与沟通邮件草稿\n                ';
-
-// Line breaks become <br> elements, as they do when assigning to innerText.
-function renderLines(text) {
-  return text.split('\n').flatMap((line, i) => (i === 0 ? [line] : [<br key={i} />, line]));
-}
+const INITIAL_RESULT = `【领航 CRM · 企业级 AI 销售智能体已就绪】
+已深度连通实时 MySQL 核心业务库（商机看板、合同审批链、回款流水、客户画像）。
+请在左侧选择快捷指令，或直接输入任何大客户跟进、业绩诊断或条款策略诉求。
+AI 将为您即刻生成：
+1. 规范化 CRM 商业洞察与风险排查
+2. 赢单概率评估与策略攻坚推荐
+3. 下一步精准触达策略与沟通话术`;
 
 export default function AiCopilot({ active }) {
   const showToast = useToast();
+  const auth = useAuth();
   const resultRef = useRef(null);
   const [input, setInput] = useState('');
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(INITIAL_RESULT);
+  const [loading, setLoading] = useState(false);
+  const [actionType, setActionType] = useState('ready');
 
-  const executeAiCopilot = (rawText) => {
-    const text = rawText.trim();
+  const executeAiCopilot = async (rawText) => {
+    const text = (rawText || input).trim();
     if (!text) {
-      showToast('请输入销售指令或纪要文本');
+      showToast('请输入销售指令或分析诉求', 'warning');
       return;
     }
 
-    setResult(LOADING_RESULT);
-
-    setTimeout(() => {
-      if (text.includes('大华')) setResult(MEETING_RESULT);
-      else if (text.includes('顺丰')) setResult(PITCH_RESULT);
-      else setResult(RESEARCH_RESULT);
-      showToast('AI 深度解析已完成！', 'success');
-    }, 400);
+    setLoading(true);
+    try {
+      const res = await crmApi.chatAi(text);
+      if (res.data?.answer) {
+        setResult(res.data.answer);
+        setActionType(res.data.actionType || 'general');
+        showToast('AI 深度解析已生成！', 'success');
+      } else {
+        setResult('AI 服务暂未返回分析内容，请稍后再试。');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(`AI 解析失败: ${err.message}`, 'error');
+      setResult(`请求 AI 服务异常: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const runAiCopilotPrompt = (type) => {
-    const prompt = PROMPTS[type] || PROMPTS.research;
+    const prompt = PROMPTS[type] || PROMPTS.deals;
     setInput(prompt);
     executeAiCopilot(prompt);
   };
 
   const copyAiWorkbenchResult = () => {
-    const text = resultRef.current.innerText;
+    const text = resultRef.current?.innerText || result;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(() => showToast('分析结果已复制到剪贴板！'));
     } else {
@@ -82,6 +70,7 @@ export default function AiCopilot({ active }) {
 
   return (
     <div id="module-ai-copilot" className={`crm-module ${active ? '' : 'hidden '}space-y-6`}>
+      {/* Top Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-purple-900/30 to-indigo-900/20 p-6 rounded-2xl border border-purple-500/30 glow-card">
         <div>
           <div className="flex items-center gap-2">
@@ -92,75 +81,91 @@ export default function AiCopilot({ active }) {
               领航 AI 销售 Copilot 智能工作台
             </h2>
             <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-semibold border border-purple-500/20">
-              大模型赋能
+              实时数据联动 · GoFiber后端驱动
             </span>
           </div>
           <p className="text-xs text-zinc-400 mt-1">
-            潜客全景背调透视、客户拜访速记智能萃取 CRM 字段与大客户谈判话术推演
+            动态聚合 MySQL 真实商机/线索/合同数据、大模型商业诊断、客户谈判策略推演与话术生成
           </p>
         </div>
+        <div className="text-xs text-zinc-400">
+          当前提问身份: <strong className="text-purple-600 dark:text-purple-400">{auth.user?.realName || '销售团队'}</strong>
+        </div>
       </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Copilot Prompting (7 cols) */}
         <div className="lg:col-span-7 bg-white dark:bg-[#121316] p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
           <h3 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
             <Icon name="sparkles" className="w-4 h-4 text-purple-500" />
-            智能销售指令助手
+            智能销售指令与快捷策略卡片
           </h3>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
-              onClick={() => runAiCopilotPrompt('meeting')}
-              className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700/80 hover:border-purple-500 text-left transition-colors"
+              onClick={() => runAiCopilotPrompt('deals')}
+              className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700/80 hover:border-purple-500 text-left transition-colors bg-zinc-50/50 dark:bg-zinc-800/30 hover:bg-purple-50/30 dark:hover:bg-purple-950/20"
             >
-              <div className="font-bold text-xs">📝 拜访纪要萃取</div>
-              <div className="text-[10px] text-zinc-400 mt-1">录音文本提取商机要素</div>
+              <div className="font-bold text-xs text-zinc-900 dark:text-zinc-100">📊 实时商机与业绩漏斗</div>
+              <div className="text-[10px] text-zinc-400 mt-1">聚合在推商机规模与赢单率</div>
             </button>
             <button
-              onClick={() => runAiCopilotPrompt('pitch')}
-              className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700/80 hover:border-purple-500 text-left transition-colors"
+              onClick={() => runAiCopilotPrompt('contracts')}
+              className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700/80 hover:border-purple-500 text-left transition-colors bg-zinc-50/50 dark:bg-zinc-800/30 hover:bg-purple-50/30 dark:hover:bg-purple-950/20"
             >
-              <div className="font-bold text-xs">🎯 竞对防守话术</div>
-              <div className="text-[10px] text-zinc-400 mt-1">破解客户压价与竞品对比</div>
+              <div className="font-bold text-xs text-zinc-900 dark:text-zinc-100">📑 待审合同与风控排查</div>
+              <div className="text-[10px] text-zinc-400 mt-1">检索待总监审批的积压合同</div>
             </button>
             <button
-              onClick={() => runAiCopilotPrompt('research')}
-              className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700/80 hover:border-purple-500 text-left transition-colors"
+              onClick={() => runAiCopilotPrompt('customer')}
+              className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700/80 hover:border-purple-500 text-left transition-colors bg-zinc-50/50 dark:bg-zinc-800/30 hover:bg-purple-50/30 dark:hover:bg-purple-950/20"
             >
-              <div className="font-bold text-xs">🏢 潜客 360° 背调</div>
-              <div className="text-[10px] text-zinc-400 mt-1">检索企业招投标与决策人</div>
+              <div className="font-bold text-xs text-zinc-900 dark:text-zinc-100">🏢 重点大客商务攻坚方案</div>
+              <div className="text-[10px] text-zinc-400 mt-1">软硬结合组合投标策略</div>
+            </button>
+            <button
+              onClick={() => runAiCopilotPrompt('defense')}
+              className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700/80 hover:border-purple-500 text-left transition-colors bg-zinc-50/50 dark:bg-zinc-800/30 hover:bg-purple-50/30 dark:hover:bg-purple-950/20"
+            >
+              <div className="font-bold text-xs text-zinc-900 dark:text-zinc-100">🎯 竞对低价防御话术</div>
+              <div className="text-[10px] text-zinc-400 mt-1">破解客户压价与友商赠送</div>
             </button>
           </div>
+
           {/* Interactive Input */}
-          <div className="space-y-2">
+          <div className="space-y-2 pt-2">
             <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-              输入您的销售指令或粘贴沟通记录：
-            </label>{' '}
+              输入您的销售指令、诊断诉求或大客户纪要：
+            </label>
             <textarea
               id="ai-workbench-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               rows="4"
-              placeholder="例如：今天与顺丰科技林总开会，对方表示预算约80万，希望能两周内上线，重点担心系统峰值并发延迟..."
+              placeholder="例如：帮我分析当前系统中金额超 100 万的重大商机，并给出本周销售总监的协同跟进建议..."
               className="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500"
-            />{' '}
+            />
             <div className="flex justify-end">
               <button
                 onClick={() => executeAiCopilot(input)}
-                className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs shadow-md shadow-purple-600/25 flex items-center gap-1.5"
+                disabled={loading}
+                className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs shadow-md shadow-purple-600/25 flex items-center gap-1.5 transition-colors disabled:opacity-50"
               >
-                <Icon name="send" className="w-3.5 h-3.5" />
-                <span>立即让 AI 深度解析</span>
+                <Icon name={loading ? 'loader' : 'send'} className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                <span>{loading ? 'AI 正在调取数据库并推理中...' : '立即让 AI 深度解析'}</span>
               </button>
             </div>
           </div>
         </div>
+
         {/* Right AI Response Terminal (5 cols) */}
-        <div className="lg:col-span-5 bg-zinc-900 text-zinc-100 p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-zinc-900 text-zinc-100 p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col justify-between min-h-[380px]">
           <div>
             <div className="flex items-center justify-between pb-3 mb-3 border-b border-zinc-800">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-mono font-bold text-zinc-300">AI 输出结果</span>
+                <span className={`w-2.5 h-2.5 rounded-full ${loading ? 'bg-amber-400 animate-ping' : 'bg-emerald-500'}`} />
+                <span className="text-xs font-mono font-bold text-zinc-300">
+                  {loading ? 'AI 智能体实时推理中...' : `AI 输出结果 (${actionType})`}
+                </span>
               </div>
               <button
                 onClick={copyAiWorkbenchResult}
@@ -171,15 +176,15 @@ export default function AiCopilot({ active }) {
             </div>
             <div
               id="ai-workbench-result"
-              className="font-mono text-xs leading-relaxed text-zinc-300 whitespace-pre-wrap"
+              className="font-mono text-xs leading-relaxed text-zinc-300 whitespace-pre-wrap max-h-[420px] overflow-y-auto"
               ref={resultRef}
             >
-              {result === null ? INITIAL_RESULT : renderLines(result)}
+              {result}
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-zinc-800 text-[10px] text-zinc-500 flex justify-between">
-            <span>模型引擎: Navigator CRM LLM 2.5</span>
-            <span>响应延迟: ~180ms</span>
+            <span>引擎: CRM Intelligent Engine v2.0</span>
+            <span>状态: 数据库实时在线</span>
           </div>
         </div>
       </div>
