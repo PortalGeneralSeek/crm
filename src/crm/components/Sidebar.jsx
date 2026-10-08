@@ -18,13 +18,6 @@ const DEFAULT_MENUS = [
   { id: 11, title: '系统与成员权限', name: 'settings', path: '/settings', icon: 'shield-check', badge: 'Admin' },
 ];
 
-const PRESET_USERS = [
-  { key: 'admin', label: '超管', pwd: 'admin123', roleTitle: '超级管理员' },
-  { key: 'director', label: '总监', pwd: 'director123', roleTitle: '销售总监' },
-  { key: 'rep', label: '销售', pwd: 'rep123', roleTitle: '客户经理 (普通销售)' },
-  { key: 'finance', label: '财务', pwd: 'finance123', roleTitle: '财务审计主管' },
-];
-
 export default function Sidebar({
   activeModule,
   onSwitchModule,
@@ -46,12 +39,13 @@ export default function Sidebar({
     if (onCloseMobile) onCloseMobile();
   };
 
-  const handleQuickSwitch = async (u) => {
+  const handleSwitchRole = async (targetRoleId) => {
+    if (auth.role?.id === targetRoleId) return;
     setSwitching(true);
     try {
-      const res = await crmApi.login(u.key, u.pwd);
+      const res = await crmApi.switchRole(targetRoleId);
       showToast(
-        `已切换身份为【${res.data.user.realName}】！左侧菜单与按钮权限已由后端动态重载。`,
+        `已切换身份为【${res.data.role.name}】！左侧菜单与按钮权限已由系统动态重载。`,
         'success'
       );
       if (res.data.menus && res.data.menus.length > 0) {
@@ -64,7 +58,7 @@ export default function Sidebar({
         }
       }
     } catch (err) {
-      showToast(`切换失败: ${err.message}`, 'error');
+      showToast(`切换角色失败: ${err.message}`, 'error');
     } finally {
       setSwitching(false);
     }
@@ -134,34 +128,46 @@ export default function Sidebar({
               </div>
             </div>
 
-            {/* 1-Click Role Switcher */}
-            <div className="pt-2 border-t border-zinc-200/60 dark:border-zinc-800/60">
-              <div className="text-[10px] font-semibold text-zinc-400 mb-1.5 flex items-center justify-between">
-                <span>切换权限角色</span>
-                {switching && <span className="animate-spin text-brand-500">⟳</span>}
+            {/* Multi-role Switcher: only shown if user has multiple roles assigned */}
+            {auth.roles && auth.roles.length > 1 && (
+              <div className="pt-2 border-t border-zinc-200/60 dark:border-zinc-800/60">
+                <div className="text-[10px] font-semibold text-zinc-400 mb-1.5 flex items-center justify-between">
+                  <span>切换身份角色 ({auth.roles.length})</span>
+                  {switching && <span className="animate-spin text-brand-500 text-xs">⟳</span>}
+                </div>
+                <div className="space-y-1">
+                  {auth.roles.map((r) => {
+                    const isActiveRole = auth.role?.id === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        disabled={switching || isActiveRole}
+                        onClick={() => handleSwitchRole(r.id)}
+                        title={`切换当前身份为: ${r.name}`}
+                        className={`w-full py-1.5 px-2.5 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between ${
+                          isActiveRole
+                            ? 'bg-brand-500 text-white shadow-xs cursor-default'
+                            : 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                        }`}
+                      >
+                        <span className="truncate">{r.name}</span>
+                        {isActiveRole ? (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-white/20 text-white font-mono shrink-0">
+                            当前
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-zinc-400 shrink-0 flex items-center gap-0.5">
+                            <span>切至</span>
+                            <Icon name="arrow-right" className="w-2.5 h-2.5" />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="grid grid-cols-4 gap-1">
-                {PRESET_USERS.map((u) => {
-                  const isActiveRole = auth.user?.username === u.key;
-                  return (
-                    <button
-                      key={u.key}
-                      type="button"
-                      disabled={switching}
-                      onClick={() => handleQuickSwitch(u)}
-                      title={`切换为: ${u.roleTitle}`}
-                      className={`py-1 px-1.5 rounded-lg text-[10px] font-semibold transition-all text-center ${
-                        isActiveRole
-                          ? 'bg-brand-500 text-white shadow-xs'
-                          : 'bg-zinc-200/70 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700'
-                      }`}
-                    >
-                      {u.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            )}
           </div>
         ) : (
           /* Collapsed Mini Avatar Header */

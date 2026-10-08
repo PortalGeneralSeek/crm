@@ -305,12 +305,37 @@ export default function Header({
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
           </div>
           <div className="hidden sm:block text-left">
-            <div className="text-xs font-bold leading-none text-zinc-900 dark:text-zinc-100 truncate max-w-[100px]">
+            <div className="text-xs font-bold leading-none text-zinc-900 dark:text-zinc-100 truncate max-w-[120px]">
               {auth.user?.realName || '未登录'}
             </div>
-            <div className="text-[10px] text-zinc-400 mt-0.5 truncate max-w-[120px]">
-              {auth.role?.name || '体验账号'}
-            </div>
+            {auth.roles && auth.roles.length > 1 ? (
+              <select
+                value={auth.role?.id}
+                onChange={async (e) => {
+                  const targetId = Number(e.target.value);
+                  if (targetId && targetId !== auth.role?.id) {
+                    try {
+                      const res = await crmApi.switchRole(targetId);
+                      showToast(`已切换身份为【${res.data.role.name}】！`, 'success');
+                    } catch (err) {
+                      showToast(`切换失败: ${err.message}`, 'error');
+                    }
+                  }
+                }}
+                className="text-[10px] text-zinc-500 dark:text-zinc-400 bg-transparent hover:text-brand-600 dark:hover:text-blue-400 cursor-pointer outline-none mt-0.5 max-w-[130px] truncate font-medium"
+                title="切换当前工作身份角色"
+              >
+                {auth.roles.map((r) => (
+                  <option key={r.id} value={r.id} className="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200">
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="text-[10px] text-zinc-400 mt-0.5 truncate max-w-[120px]">
+                {auth.role?.name || '体验账号'}
+              </div>
+            )}
           </div>
           <button
             onClick={onLogout}

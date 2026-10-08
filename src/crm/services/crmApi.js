@@ -7,6 +7,7 @@ const DEFAULT_AUTH = {
   token: '',
   user: null,
   role: null,
+  roles: [],
   permissions: [],
   menus: [],
   isLoggedIn: false,
@@ -48,6 +49,7 @@ export const authStore = {
       token: data.token || '',
       user: data.user || null,
       role: data.role || null,
+      roles: data.roles || (data.role ? [data.role] : []),
       permissions: data.permissions || [],
       menus: data.menus || [],
       isLoggedIn: Boolean(data.token),
@@ -134,6 +136,17 @@ export const crmApi = {
 
   getDynamicMenus: async () => {
     return request('/api/v1/auth/menus');
+  },
+
+  switchRole: async (roleId) => {
+    const res = await request('/api/v1/auth/switch-role', {
+      method: 'POST',
+      body: JSON.stringify({ roleId }),
+    });
+    if (res.data) {
+      authStore.setSession(res.data);
+    }
+    return res;
   },
 
   // Deals API
