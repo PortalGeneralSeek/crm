@@ -74,6 +74,7 @@ func main() {
 	dealH := handler.NewDealHandler()
 	leadH := handler.NewLeadHandler()
 	roleH := handler.NewRoleHandler()
+	userH := handler.NewUserHandler()
 
 	// 7. Route Groups
 	api := app.Group("/api/v1")
@@ -111,8 +112,20 @@ func main() {
 
 	// Roles & Permissions Matrix
 	protected.Get("/roles", roleH.ListRoles)
+	protected.Post("/roles", middleware.RequirePermission("btn:role:add"), roleH.CreateRole)
+	protected.Put("/roles/:id", middleware.RequirePermission("btn:role:edit"), roleH.UpdateRole)
+	protected.Delete("/roles/:id", middleware.RequirePermission("btn:role:delete"), roleH.DeleteRole)
 	protected.Get("/roles/:id/permissions", roleH.GetRolePermissions)
 	protected.Put("/roles/:id/permissions", middleware.RequirePermission("btn:role:edit"), roleH.UpdateRolePermissions)
+	protected.Get("/permissions/tree", roleH.GetPermissionsTree)
+
+	// User Management (Admin can add users & assign permissions)
+	protected.Get("/users", middleware.RequirePermission("btn:user:list"), userH.ListUsers)
+	protected.Post("/users", middleware.RequirePermission("btn:user:add"), userH.CreateUser)
+	protected.Put("/users/:id", middleware.RequirePermission("btn:user:edit"), userH.UpdateUser)
+	protected.Put("/users/:id/status", middleware.RequirePermission("btn:user:status"), userH.UpdateUserStatus)
+	protected.Post("/users/:id/reset-password", middleware.RequirePermission("btn:user:reset_pwd"), userH.ResetPassword)
+	protected.Delete("/users/:id", middleware.RequirePermission("btn:user:delete"), userH.DeleteUser)
 
 	// 8. Start Server with Graceful Shutdown
 	go func() {
