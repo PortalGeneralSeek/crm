@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, Suspense, lazy } from 'react';
 import FollowupDrawer from './components/FollowupDrawer';
 import Header from './components/Header';
-import ModeSwitcher from './components/ModeSwitcher';
 import NewDealModal from './components/NewDealModal';
 import NewLeadModal from './components/NewLeadModal';
 import Sidebar from './components/Sidebar';
@@ -156,18 +155,12 @@ function Workspace() {
 
   return (
     <>
-      <ModeSwitcher
-        view={view}
-        isDark={isDark}
-        onSwitchView={switchView}
-        onToggleTheme={handleToggleTheme}
-        isLoggedIn={auth.isLoggedIn}
-      />
-
       <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-[#09090b]" />}>
         <LoginView
           hidden={view !== 'login'}
           onEnterWorkbench={() => switchView('workbench')}
+          isDark={isDark}
+          onToggleTheme={handleToggleTheme}
         />
       </Suspense>
 
@@ -187,6 +180,8 @@ function Workspace() {
           onToggleMobileSidebar={() => setMobileSidebarOpen((o) => !o)}
           isSidebarCollapsed={sidebarCollapsed}
           onToggleCollapse={handleToggleCollapse}
+          isDark={isDark}
+          onToggleTheme={handleToggleTheme}
         />
 
         <div className="flex-1 flex overflow-hidden">

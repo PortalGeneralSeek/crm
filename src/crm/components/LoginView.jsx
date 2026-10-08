@@ -8,7 +8,7 @@ const ACTIVE_TAB =
 const INACTIVE_TAB =
   'pb-3 border-b-2 border-transparent font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors';
 
-export default function LoginView({ hidden, onEnterWorkbench }) {
+export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTheme }) {
   const showToast = useToast();
   const [tab, setTab] = useState('account');
   const [showPassword, setShowPassword] = useState(false);
@@ -44,6 +44,24 @@ export default function LoginView({ hidden, onEnterWorkbench }) {
       id="view-login"
       className={`view-transition min-h-screen flex flex-col justify-between relative overflow-hidden bg-slate-50 dark:bg-[#09090b]${hidden ? ' view-hidden' : ''}`}
     >
+      {/* Top-right Theme Switcher Button (右上角主题切换) */}
+      {onToggleTheme && (
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30">
+          <button
+            id="login-theme-toggle"
+            type="button"
+            onClick={onToggleTheme}
+            className="p-2.5 rounded-2xl bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-700 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white shadow-sm hover:shadow transition-all"
+            title={isDark ? '切换浅色模式' : '切换深色模式'}
+          >
+            {isDark ? (
+              <Icon name="sun" className="w-4 h-4 text-amber-500" />
+            ) : (
+              <Icon name="moon" className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
+            )}
+          </button>
+        </div>
+      )}
       {/* Ambient Gradient Blobs */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-500/15 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 -right-40 w-[30rem] h-[30rem] bg-indigo-500/15 dark:bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />

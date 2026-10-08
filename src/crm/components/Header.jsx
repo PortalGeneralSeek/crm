@@ -17,6 +17,8 @@ export default function Header({
   onToggleMobileSidebar,
   isSidebarCollapsed,
   onToggleCollapse,
+  isDark,
+  onToggleTheme,
 }) {
   const showToast = useToast();
   const auth = useAuth();
@@ -319,6 +321,22 @@ export default function Header({
         >
           <Icon name="sparkles" className="w-4 h-4" />
         </button>
+        {/* Theme Toggle Button (右上角主题切换) */}
+        {onToggleTheme && (
+          <button
+            id="header-theme-toggle"
+            type="button"
+            onClick={onToggleTheme}
+            className="p-2 rounded-xl text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title={isDark ? '切换浅色模式' : '切换深色模式'}
+          >
+            {isDark ? (
+              <Icon name="sun" className="w-4 h-4 text-amber-500" />
+            ) : (
+              <Icon name="moon" className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
+            )}
+          </button>
+        )}
         {/* Custom Styled Role Dropdown in Header (自定义美化身份切换下拉选) */}
         <RoleDropdown
           roles={auth.roles}
