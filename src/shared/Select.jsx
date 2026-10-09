@@ -7,6 +7,7 @@ import Icon from './Icon';
  * Supports:
  * - Direct options array: `options={[{ value, label, icon, description, badge, disabled }]}` or `['A', 'B']`
  * - Children `<option>` support for drop-in replacement: `<Select><option value="1">Item 1</option></Select>`
+ * - Placement: 'bottom' (default), 'top', 'auto' (intelligent viewport boundary detection)
  * - Sizes: 'sm' (filter bar), 'md' (standard form), 'lg'
  * - Variants: 'default', 'filter', 'header', 'inline'
  * - Dark mode & accessibility (Escape to close, outside click to close)
@@ -21,6 +22,7 @@ export default function Select({
   size = 'md',
   variant = 'default',
   align = 'left',
+  placement = 'bottom',
   icon,
   label,
   error,
@@ -28,6 +30,8 @@ export default function Select({
   className = '',
   buttonClassName = '',
   dropdownClassName = '',
+  dropdownHeader,
+  dropdownFooter,
   renderOption,
   renderTrigger,
   emptyText = '暂无选项',
@@ -35,6 +39,7 @@ export default function Select({
   name,
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropUp, setDropUp] = useState(false);
   const containerRef = useRef(null);
   const dropdownRef = useRef(null);
 
@@ -85,6 +90,37 @@ export default function Select({
   const selectedOption = useMemo(() => {
     return options.find((opt) => String(opt.value) === String(value));
   }, [options, value]);
+
+  // Intelligent positioning & boundary detection
+  useEffect(() => {
+    if (!isOpen || !containerRef.current) return;
+
+    if (placement === 'top') {
+      setDropUp(true);
+      return;
+    }
+    if (placement === 'bottom') {
+      setDropUp(false);
+      return;
+    }
+
+    // Auto placement: measure viewport bounds
+    try {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      // In the top header area (rect.top < 120), ALWAYS open downward
+      if (rect.top < 120) {
+        setDropUp(false);
+      } else if (spaceBelow < 260 && spaceAbove > spaceBelow) {
+        setDropUp(true);
+      } else {
+        setDropUp(false);
+      }
+    } catch {
+      setDropUp(false);
+    }
+  }, [isOpen, placement]);
 
   // Close on outside click or escape
   useEffect(() => {
@@ -167,7 +203,7 @@ export default function Select({
   return (
     <div
       ref={containerRef}
-      className={`relative inline-block text-left ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`relative ${fullWidth ? 'w-full' : 'inline-block'} text-left ${className}`}
       id={id ? `${id}-container` : undefined}
     >
       {label && (
@@ -237,17 +273,25 @@ export default function Select({
         </button>
       )}
 
-      {/* Dropdown Menu Popover */}
+      {/* Dropdown Menu Popover with guaranteed top-full or bottom-full positioning */}
       {isOpen && (
         <div
           ref={dropdownRef}
           className={`absolute ${
+            dropUp ? 'bottom-full mb-2' : 'top-full mt-2'
+          } ${
             align === 'right' ? 'right-0' : 'left-0'
-          } mt-1.5 min-w-[160px] max-h-64 overflow-y-auto custom-scrollbar bg-white dark:bg-[#18191d] rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-xl shadow-zinc-950/10 dark:shadow-black/40 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 ${
+          } min-w-[160px] max-h-72 overflow-y-auto custom-scrollbar bg-white dark:bg-[#18191d] rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-2xl shadow-zinc-950/15 dark:shadow-black/60 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 ${
             fullWidth ? 'w-full' : ''
           } ${dropdownClassName}`}
           role="listbox"
         >
+          {dropdownHeader && (
+            <div className="px-2.5 py-1.5 mb-1 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/70 text-[10px] font-semibold text-zinc-400">
+              {dropdownHeader}
+            </div>
+          )}
+
           {options.length === 0 ? (
             <div className="px-3 py-2.5 text-xs text-center text-zinc-400 dark:text-zinc-500">
               {emptyText}
@@ -318,6 +362,12 @@ export default function Select({
                 </button>
               );
             })
+          )}
+
+          {dropdownFooter && (
+            <div className="px-2.5 py-1.5 mt-1 border-t border-zinc-100 dark:border-zinc-800/70 text-[10px] text-zinc-400">
+              {dropdownFooter}
+            </div>
           )}
         </div>
       )}

@@ -50,9 +50,21 @@ export default function RoleDropdown({
       }}
       disabled={loading}
       variant={variant}
+      placement="bottom"
       align="right"
       className={className}
-      dropdownClassName="w-72"
+      dropdownClassName="w-72 shadow-2xl"
+      dropdownHeader={
+        <div className="flex items-center justify-between w-full">
+          <span className="flex items-center gap-1.5 font-bold text-zinc-700 dark:text-zinc-300">
+            <Icon name="users" className="w-3.5 h-3.5 text-brand-500" />
+            <span>切换工作身份角色</span>
+          </span>
+          <span className="px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-mono text-[10px]">
+            {roles.length} 个角色
+          </span>
+        </div>
+      }
       renderTrigger={(selectedOpt, isOpen, handleToggle) => (
         <button
           type="button"

@@ -104,7 +104,7 @@ export default function Header({
   };
 
   return (
-    <header className="h-16 flex-none bg-white dark:bg-[#121316] border-b border-zinc-200 dark:border-zinc-800 z-30 px-4 lg:px-6 flex items-center justify-between">
+    <header className="h-16 flex-none bg-white dark:bg-[#121316] border-b border-zinc-200 dark:border-zinc-800 z-40 px-4 lg:px-6 flex items-center justify-between">
       {/* Brand & Breadcrumb & Mobile Drawer Trigger */}
       <div className="flex items-center gap-3 sm:gap-6">
         {/* Mobile Hamburger Button */}
@@ -274,7 +274,7 @@ export default function Header({
           </button>{' '}
           <div
             id="dropdown-notifications"
-            className={`${notificationsOpen ? '' : 'hidden '}absolute right-0 mt-2 w-80 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800 p-3 z-50`}
+            className={`${notificationsOpen ? '' : 'hidden '}absolute right-0 top-full mt-2 w-80 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800 p-3 z-50`}
           >
             <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800 px-1">
               <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
@@ -346,7 +346,6 @@ export default function Header({
           onSelect={handleRoleSwitch}
           loading={switchingRole}
           variant="header"
-          className="flex items-center"
         />
 
         {/* User Profile Pill */}
