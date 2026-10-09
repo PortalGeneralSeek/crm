@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Icon from '../../shared/Icon';
-import { useAuth, crmApi } from '../services/crmApi';
+import { useAuth, crmApi, authStore } from '../services/crmApi';
 import { useToast } from '../hooks/useToast';
 
 export default function ProfileModal({ isOpen, onClose, onLogout }) {
@@ -29,6 +29,15 @@ export default function ProfileModal({ isOpen, onClose, onLogout }) {
     try {
       await crmApi.updateProfile({ realName, email, phone });
       showToast('个人资料已成功更新！', 'success');
+      authStore.setSession({
+        ...auth,
+        user: {
+          ...auth.user,
+          realName: realName.trim() || auth.user?.realName,
+          email: email.trim(),
+          phone: phone.trim(),
+        },
+      });
     } catch (err) {
       showToast(`更新资料失败: ${err.message}`, 'error');
     } finally {

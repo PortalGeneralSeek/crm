@@ -111,6 +111,14 @@ async function request(url, options = {}) {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
+    if (res.status === 401 && !url.includes('/api/v1/auth/login')) {
+      authStore.logout();
+      window.dispatchEvent(
+        new CustomEvent('crm:auth:expired', {
+          detail: data.message || '登录会话已过期或令牌失效，已自动退出',
+        })
+      );
+    }
     throw new Error(data.message || `HTTP ${res.status}: 请求失败`);
   }
 
