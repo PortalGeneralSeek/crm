@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"crm-backend/internal/database"
@@ -93,7 +94,7 @@ func (s *ProductService) CreateProduct(p *model.CrmProduct, userID uint, usernam
 		return errors.New("产品名称与标准售价为必填项")
 	}
 	if p.ProductCode == "" {
-		p.ProductCode = fmt.Sprintf("PRD-%s-%03d", time.Now().Format("06"), time.Now().Unix()%1000)
+		p.ProductCode = fmt.Sprintf("PRD-%s-%04d", time.Now().Format("20060102"), rand.Intn(9000)+1000)
 	}
 	p.CreatedAt = time.Now()
 	p.UpdatedAt = time.Now()

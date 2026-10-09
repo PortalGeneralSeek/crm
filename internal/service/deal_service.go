@@ -126,6 +126,11 @@ func (s *DealService) AdvanceStage(id uint, nextStage string, userID uint, usern
 		return errors.New("商机不存在")
 	}
 
+	// IDOR Protection: Sales reps can only advance deals they own
+	if roleName == "sales_rep" && deal.OwnerID > 0 && deal.OwnerID != userID {
+		return errors.New("权限不足：无权推进非本人负责的商机阶段")
+	}
+
 	prob := 50
 	switch nextStage {
 	case "discovery":
@@ -154,7 +159,7 @@ func (s *DealService) AdvanceStage(id uint, nextStage string, userID uint, usern
 		var existingContract model.CrmContract
 		if err := database.DB.Where("deal_id = ?", deal.ID).First(&existingContract).Error; err != nil {
 			contract := model.CrmContract{
-				ContractNo:   fmt.Sprintf("CT-%s-%03d", time.Now().Format("2006"), deal.ID),
+				ContractNo:   fmt.Sprintf("CT-%s-%04d", time.Now().Format("20060102150405"), deal.ID%10000),
 				Title:        deal.CustomerName + " · 商业交付主合同",
 				CustomerID:   deal.CustomerID,
 				CustomerName: deal.CustomerName,
@@ -179,6 +184,11 @@ func (s *DealService) DeleteDeal(id uint, userID uint, username, roleName, ip st
 	var deal model.CrmDeal
 	if err := database.DB.First(&deal, id).Error; err != nil {
 		return errors.New("商机不存在")
+	}
+
+	// IDOR Protection: Sales reps can only delete deals they own
+	if roleName == "sales_rep" && deal.OwnerID > 0 && deal.OwnerID != userID {
+		return errors.New("权限不足：无权删除非本人负责的商机")
 	}
 
 	if err := database.DB.Delete(&deal).Error; err != nil {

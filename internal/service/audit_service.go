@@ -25,10 +25,19 @@ func (s *AuditService) Record(userID uint, username, roleName, module, action, m
 		Details:   details,
 		CreatedAt: time.Now(),
 	}
-	_ = database.DB.Create(&log)
+
+	// Asynchronous write to prevent blocking HTTP handler latency
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				// avoid panic crash in background goroutine
+			}
+		}()
+		_ = database.DB.Create(&log)
+	}()
 }
 
-func (s *AuditService) List(page, pageSize int, keyword string) ([]model.SysOperationLog, int64, error) {
+func (s *AuditService) List(page, pageSize int, keyword, module string) ([]model.SysOperationLog, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -43,6 +52,9 @@ func (s *AuditService) List(page, pageSize int, keyword string) ([]model.SysOper
 	if keyword != "" {
 		query = query.Where("username LIKE ? OR module LIKE ? OR action LIKE ? OR details LIKE ?",
 			"%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%")
+	}
+	if module != "" {
+		query = query.Where("module = ?", module)
 	}
 
 	if err := query.Count(&total).Error; err != nil {

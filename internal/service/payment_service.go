@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"crm-backend/internal/database"
@@ -52,7 +53,7 @@ func (s *PaymentService) CreatePayment(p *model.CrmPayment, userID uint, usernam
 		return errors.New("回款金额与关联客户为必填项")
 	}
 	if p.PaymentNo == "" {
-		p.PaymentNo = fmt.Sprintf("PM-%s-%03d", time.Now().Format("2006"), time.Now().Unix()%1000)
+		p.PaymentNo = fmt.Sprintf("PM-%s-%04d", time.Now().Format("20060102150405"), rand.Intn(9000)+1000)
 	}
 	if p.Status == "" {
 		p.Status = "pending"
@@ -78,6 +79,10 @@ func (s *PaymentService) AuditPayment(id uint, userID uint, username, roleName, 
 	var payment model.CrmPayment
 	if err := database.DB.First(&payment, id).Error; err != nil {
 		return errors.New("回款记录不存在")
+	}
+
+	if roleName == "sales_rep" {
+		return errors.New("权限不足：普通销售无权审核对账回款流水")
 	}
 
 	payment.Status = "audited"

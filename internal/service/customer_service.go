@@ -76,6 +76,11 @@ func (s *CustomerService) UpdateCustomer(id uint, req *model.CrmCustomer, userID
 		return errors.New("客户不存在")
 	}
 
+	// IDOR Protection: Sales reps can only update customers they own
+	if roleName == "sales_rep" && customer.OwnerID > 0 && customer.OwnerID != userID {
+		return errors.New("权限不足：无权修改非本人负责的客户资料")
+	}
+
 	customer.Name = req.Name
 	customer.Industry = req.Industry
 	customer.Tier = req.Tier
@@ -95,6 +100,11 @@ func (s *CustomerService) DeleteCustomer(id uint, userID uint, username, roleNam
 	var customer model.CrmCustomer
 	if err := database.DB.First(&customer, id).Error; err != nil {
 		return errors.New("客户不存在")
+	}
+
+	// IDOR Protection: Sales reps can only delete/release customers they own
+	if roleName == "sales_rep" && customer.OwnerID > 0 && customer.OwnerID != userID {
+		return errors.New("权限不足：无权释放或删除非本人负责的客户")
 	}
 
 	if err := database.DB.Delete(&customer).Error; err != nil {

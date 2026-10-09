@@ -22,8 +22,9 @@ func (h *AuditHandler) ListLogs(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	pageSize, _ := strconv.Atoi(c.Query("pageSize", "20"))
 	keyword := c.Query("keyword", "")
+	module := c.Query("module", "")
 
-	logs, total, err := h.auditService.List(page, pageSize, keyword)
+	logs, total, err := h.auditService.List(page, pageSize, keyword, module)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"code":    500,

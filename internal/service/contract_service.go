@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"crm-backend/internal/database"
@@ -57,7 +58,7 @@ func (s *ContractService) CreateContract(c *model.CrmContract, userID uint, user
 		return errors.New("合同名称与有效金额为必填项")
 	}
 	if c.ContractNo == "" {
-		c.ContractNo = fmt.Sprintf("CT-%s-%03d", time.Now().Format("2006"), time.Now().Unix()%1000)
+		c.ContractNo = fmt.Sprintf("CT-%s-%04d", time.Now().Format("20060102150405"), rand.Intn(9000)+1000)
 	}
 	c.CreatedAt = time.Now()
 	c.UpdatedAt = time.Now()
@@ -83,6 +84,10 @@ func (s *ContractService) ApproveContract(id uint, userID uint, username, roleNa
 		return errors.New("合同不存在")
 	}
 
+	if roleName == "sales_rep" {
+		return errors.New("权限不足：普通销售无权终审审批合同")
+	}
+
 	contract.Status = "approved"
 	contract.UpdatedAt = time.Now()
 
@@ -98,6 +103,11 @@ func (s *ContractService) UpdateContract(id uint, req *model.CrmContract, userID
 	var contract model.CrmContract
 	if err := database.DB.First(&contract, id).Error; err != nil {
 		return errors.New("合同不存在")
+	}
+
+	// IDOR Protection: Sales reps can only update contracts they own
+	if roleName == "sales_rep" && contract.OwnerID > 0 && contract.OwnerID != userID {
+		return errors.New("权限不足：无权修改非本人负责的合同要素")
 	}
 
 	contract.Title = req.Title
@@ -118,6 +128,11 @@ func (s *ContractService) DeleteContract(id uint, userID uint, username, roleNam
 	var contract model.CrmContract
 	if err := database.DB.First(&contract, id).Error; err != nil {
 		return errors.New("合同不存在")
+	}
+
+	// IDOR Protection: Sales reps can only delete contracts they own
+	if roleName == "sales_rep" && contract.OwnerID > 0 && contract.OwnerID != userID {
+		return errors.New("权限不足：无权作废或删除非本人负责的合同")
 	}
 
 	if err := database.DB.Delete(&contract).Error; err != nil {
