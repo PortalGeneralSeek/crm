@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import Icon from '../../shared/Icon';
+import Select from '../../shared/Select';
 import { useAuth, crmApi, authStore } from '../services/crmApi';
 import { useToast } from '../hooks/useToast';
 
@@ -532,29 +533,29 @@ export default function Settings({ active }) {
               </div>
 
               {/* Role Filter */}
-              <select
+              <Select
                 value={filterRoleId}
-                onChange={(e) => setFilterRoleId(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none text-zinc-700 dark:text-zinc-300"
-              >
-                <option value="">全部所属角色</option>
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setFilterRoleId(val)}
+                size="sm"
+                variant="filter"
+                options={[
+                  { value: '', label: '全部所属角色' },
+                  ...roles.map((r) => ({ value: r.id, label: r.name })),
+                ]}
+              />
 
               {/* Status Filter */}
-              <select
+              <Select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none text-zinc-700 dark:text-zinc-300"
-              >
-                <option value="">全部账号状态</option>
-                <option value="1">正常 (Active)</option>
-                <option value="0">已停用 (Disabled)</option>
-              </select>
+                onChange={(val) => setFilterStatus(val)}
+                size="sm"
+                variant="filter"
+                options={[
+                  { value: '', label: '全部账号状态' },
+                  { value: '1', label: '正常 (Active)' },
+                  { value: '0', label: '已停用 (Disabled)' },
+                ]}
+              />
             </div>
 
             <div className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -630,23 +631,23 @@ export default function Settings({ active }) {
 
                               {/* Quick Role Switch dropdown */}
                               {auth.canAssignRole && (
-                                <select
+                                <Select
                                   value={u.roleId}
-                                  onChange={(e) => {
+                                  onChange={(val) => {
                                     const targetRole = roles.find(
-                                      (r) => String(r.id) === e.target.value
+                                      (r) => String(r.id) === String(val)
                                     );
                                     if (targetRole) handleQuickRoleAssign(u, targetRole);
                                   }}
-                                  className="text-[10px] py-1 px-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg outline-none cursor-pointer"
-                                  title="快速为该用户重新分配角色"
-                                >
-                                  {roles.map((r) => (
-                                    <option key={r.id} value={r.id}>
-                                      转为: {r.name}
-                                    </option>
-                                  ))}
-                                </select>
+                                  size="sm"
+                                  variant="filter"
+                                  align="right"
+                                  dropdownClassName="w-44"
+                                  options={roles.map((r) => ({
+                                    value: r.id,
+                                    label: `转为: ${r.name}`,
+                                  }))}
+                                />
                               )}
                             </div>
                           </td>
@@ -948,26 +949,28 @@ export default function Settings({ active }) {
                 />
               </div>
 
-              <select
+              <Select
                 value={auditModule}
-                onChange={(e) => {
-                  setAuditModule(e.target.value);
+                onChange={(val) => {
+                  setAuditModule(val);
                   setAuditPage(1);
                 }}
-                className="px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none focus:border-brand-500 cursor-pointer text-zinc-700 dark:text-zinc-300"
-              >
-                <option value="">全部业务模块</option>
-                <option value="认证服务">认证服务 (Auth)</option>
-                <option value="商机管理">商机管理 (Deals)</option>
-                <option value="线索管理">线索管理 (Leads)</option>
-                <option value="客户管理">客户管理 (Customers)</option>
-                <option value="合同管理">合同管理 (Contracts)</option>
-                <option value="回款管理">回款管理 (Payments)</option>
-                <option value="产品管理">产品管理 (Products)</option>
-                <option value="用户管理">用户管理 (Users)</option>
-                <option value="权限管理">权限管理 (RBAC)</option>
-                <option value="AI 智能体">AI 销售智能体 (Copilot)</option>
-              </select>
+                size="sm"
+                variant="filter"
+                options={[
+                  { value: '', label: '全部业务模块' },
+                  { value: '认证服务', label: '认证服务 (Auth)' },
+                  { value: '商机管理', label: '商机管理 (Deals)' },
+                  { value: '线索管理', label: '线索管理 (Leads)' },
+                  { value: '客户管理', label: '客户管理 (Customers)' },
+                  { value: '合同管理', label: '合同管理 (Contracts)' },
+                  { value: '回款管理', label: '回款管理 (Payments)' },
+                  { value: '产品管理', label: '产品管理 (Products)' },
+                  { value: '用户管理', label: '用户管理 (Users)' },
+                  { value: '权限管理', label: '权限管理 (RBAC)' },
+                  { value: 'AI 智能体', label: 'AI 销售智能体 (Copilot)' },
+                ]}
+              />
             </div>
 
             <div className="text-xs text-zinc-400">
@@ -1151,17 +1154,16 @@ export default function Settings({ active }) {
                 <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                   分配权限角色 *
                 </label>
-                <select
+                <Select
                   value={newRoleId}
-                  onChange={(e) => setNewRoleId(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none focus:border-brand-500"
-                >
-                  {roles.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} ({r.code})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setNewRoleId(val)}
+                  fullWidth
+                  size="md"
+                  options={roles.map((r) => ({
+                    value: r.id,
+                    label: `${r.name} (${r.code})`,
+                  }))}
+                />
                 <p className="text-[11px] text-zinc-400 mt-1">
                   新用户将立即继承该角色的全部菜单、按钮与价格查看权限。
                 </p>
@@ -1291,17 +1293,16 @@ export default function Settings({ active }) {
                 <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                   重新分配所属角色
                 </label>
-                <select
+                <Select
                   value={editRoleId}
-                  onChange={(e) => setEditRoleId(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none focus:border-brand-500 font-semibold"
-                >
-                  {roles.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} ({r.code})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setEditRoleId(val)}
+                  fullWidth
+                  size="md"
+                  options={roles.map((r) => ({
+                    value: r.id,
+                    label: `${r.name} (${r.code})`,
+                  }))}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

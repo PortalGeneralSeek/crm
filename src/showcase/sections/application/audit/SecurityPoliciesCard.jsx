@@ -1,4 +1,5 @@
 import Icon from '../../../../shared/Icon';
+import Select from '../../../../shared/Select';
 
 export default function SecurityPoliciesCard({
   policies,
@@ -67,16 +68,18 @@ export default function SecurityPoliciesCard({
               网页端若在指定时长内无鼠标与键盘交互，系统将自动退出登录并锁定数据视图。
             </p>
             <div className="pt-1">
-              <select
+              <Select
                 value={policies.sessionTimeout}
-                onChange={(e) => onChangeTimeout(e.target.value)}
-                className="px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                <option value="15m">15 分钟无操作锁定</option>
-                <option value="30m">30 分钟无操作锁定</option>
-                <option value="1h">1 小时无操作锁定</option>
-                <option value="4h">4 小时无操作锁定</option>
-              </select>
+                onChange={(val) => onChangeTimeout(val)}
+                size="sm"
+                variant="filter"
+                options={[
+                  { value: '15m', label: '15 分钟无操作锁定' },
+                  { value: '30m', label: '30 分钟无操作锁定' },
+                  { value: '1h', label: '1 小时无操作锁定' },
+                  { value: '4h', label: '4 小时无操作锁定' },
+                ]}
+              />
             </div>
           </div>
         </div>

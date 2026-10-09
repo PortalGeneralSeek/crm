@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Icon from '../../shared/Icon';
+import Select from '../../shared/Select';
 import { useToast } from '../hooks/useToast';
 import { useAuth, crmApi } from '../services/crmApi';
 
@@ -367,16 +368,18 @@ export default function Leads({ active, onOpenNewLead, onConvertLead }) {
                   <label className="block font-semibold mb-1 text-zinc-700 dark:text-zinc-300">
                     线索来源渠道
                   </label>
-                  <select
+                  <Select
                     value={formData.source}
-                    onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500"
-                  >
-                    <option value="官网咨询">官网咨询</option>
-                    <option value="行业展会">行业展会峰会</option>
-                    <option value="生态合作伙伴">生态合作伙伴</option>
-                    <option value="客户转介绍">老客户转介绍</option>
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, source: val })}
+                    fullWidth
+                    size="md"
+                    options={[
+                      { value: '官网咨询', label: '官网咨询' },
+                      { value: '行业展会', label: '行业展会峰会' },
+                      { value: '生态合作伙伴', label: '生态合作伙伴' },
+                      { value: '客户转介绍', label: '老客户转介绍' },
+                    ]}
+                  />
                 </div>
                 <div>
                   <label className="block font-semibold mb-1 text-zinc-700 dark:text-zinc-300">

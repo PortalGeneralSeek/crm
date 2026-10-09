@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Icon from '../../shared/Icon';
+import Select from '../../shared/Select';
 import { crmApi } from '../services/crmApi';
 import { useToast } from '../hooks/useToast';
 
@@ -165,17 +166,19 @@ export default function Contracts({ active }) {
               className="w-full pl-9 pr-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none focus:border-brand-500"
             />
           </div>
-          <select
+          <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none"
-          >
-            <option value="">全部状态</option>
-            <option value="pending_approval">待总监审批 (pending_approval)</option>
-            <option value="approved">审批通过 (approved)</option>
-            <option value="active">执行生效 (active)</option>
-            <option value="completed">归档完成 (completed)</option>
-          </select>
+            onChange={(val) => setStatusFilter(val)}
+            size="sm"
+            variant="filter"
+            options={[
+              { value: '', label: '全部状态' },
+              { value: 'pending_approval', label: '待总监审批 (pending_approval)' },
+              { value: 'approved', label: '审批通过 (approved)' },
+              { value: 'active', label: '执行生效 (active)' },
+              { value: 'completed', label: '归档完成 (completed)' },
+            ]}
+          />
         </div>
         <div className="text-xs text-zinc-400">
           共收录合同: <span className="font-bold text-brand-600">{total}</span> 份

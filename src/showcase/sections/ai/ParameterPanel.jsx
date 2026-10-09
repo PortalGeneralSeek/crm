@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import Icon from '../../../shared/Icon';
+import Select from '../../../shared/Select';
 import { useToast } from '../../components/ToastProvider';
 
 export default function ParameterPanel() {
   const { showToast } = useToast();
   const [temperature, setTemperature] = useState('0.7');
   const [maxTokens, setMaxTokens] = useState('4096');
+  const [model, setModel] = useState('Gemini 3.8 Flash (High)');
 
   return (
     <>
@@ -23,15 +25,18 @@ export default function ParameterPanel() {
             <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
               Foundation Model
             </label>{' '}
-            <select
-              className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-primary font-medium"
-              defaultValue="Gemini 3.8 Flash (High)"
-            >
-              <option>Gemini 3.8 Flash (High)</option>
-              <option>Gemini 3.7 Pro (Max)</option>
-              <option>Claude 3.5 Sonnet</option>
-              <option>GPT-4o</option>
-            </select>
+            <Select
+              fullWidth
+              size="md"
+              value={model}
+              onChange={(val) => setModel(val)}
+              options={[
+                { value: 'Gemini 3.8 Flash (High)', label: 'Gemini 3.8 Flash (High)' },
+                { value: 'Gemini 3.7 Pro (Max)', label: 'Gemini 3.7 Pro (Max)' },
+                { value: 'Claude 3.5 Sonnet', label: 'Claude 3.5 Sonnet' },
+                { value: 'GPT-4o', label: 'GPT-4o' },
+              ]}
+            />
           </div>
           {/* Temperature Slider */}
           <div className="space-y-2">

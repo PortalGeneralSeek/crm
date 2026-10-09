@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Icon from '../../shared/Icon';
+import Select from '../../shared/Select';
 import { useToast } from '../hooks/useToast';
 import { crmStore } from '../store/crmStore';
 
@@ -13,6 +14,7 @@ export default function NewDealModal({
 }) {
   const showToast = useToast();
   const [amount, setAmount] = useState('');
+  const [stage, setStage] = useState('初步接洽');
 
   const handleCreateDeal = (e) => {
     e.preventDefault();
@@ -21,7 +23,7 @@ export default function NewDealModal({
       name: company.trim(),
       desc: title.trim(),
       amount: Number(amount) || 0,
-      stage: '初步接洽',
+      stage: stage || '初步接洽',
     });
     onClose();
     showToast(`商机「${title}」创建成功！预估金额 ¥${Number(amount).toLocaleString()}`, 'success');
@@ -87,14 +89,18 @@ export default function NewDealModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block font-semibold mb-1">所属初始阶段</label>{' '}
-              <select
+              <Select
                 id="new-deal-stage"
-                className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700"
-              >
-                <option value="初步接洽">初步接洽 (需求调研)</option>
-                <option value="方案呈现">方案呈现 (技术验证)</option>
-                <option value="商务谈判">商务谈判 (标书报价)</option>
-              </select>
+                value={stage}
+                onChange={(val) => setStage(val)}
+                fullWidth
+                size="md"
+                options={[
+                  { value: '初步接洽', label: '初步接洽 (需求调研)' },
+                  { value: '方案呈现', label: '方案呈现 (技术验证)' },
+                  { value: '商务谈判', label: '商务谈判 (标书报价)' },
+                ]}
+              />
             </div>
             <div>
               <label className="block font-semibold mb-1">预计签约日期</label>{' '}

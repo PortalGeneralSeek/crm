@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Icon from '../../shared/Icon';
+import Select from '../../shared/Select';
 import { useToast } from '../hooks/useToast';
 import { crmStore } from '../store/crmStore';
 
@@ -78,15 +79,19 @@ export default function NewLeadModal({ open, onClose }) {
           </div>
           <div>
             <label className="block font-semibold mb-1">线索来源</label>{' '}
-            <select
+            <Select
               id="lead-source"
-              className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700"
-            >
-              <option>市场活动 / 峰会展台</option>
-              <option>官网自主咨询表单</option>
-              <option>老客户转介绍</option>
-              <option>外部渠道与代理商</option>
-            </select>
+              value={source}
+              onChange={(val) => setSource(val)}
+              fullWidth
+              size="md"
+              options={[
+                { value: '市场活动 / 峰会展台', label: '市场活动 / 峰会展台' },
+                { value: '官网自主咨询表单', label: '官网自主咨询表单' },
+                { value: '老客户转介绍', label: '老客户转介绍' },
+                { value: '外部渠道与代理商', label: '外部渠道与代理商' },
+              ]}
+            />
           </div>
           <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-2">
             <button

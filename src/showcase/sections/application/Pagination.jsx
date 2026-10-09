@@ -1,17 +1,25 @@
+import { useState } from 'react';
+import Select from '../../../shared/Select';
+
 export default function Pagination() {
+  const [pageSize, setPageSize] = useState('25 条');
+
   return (
     <>
       <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-zinc-500">
         <div className="flex items-center gap-2">
           <span>每页展示:</span>
-          <select
-            className="px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs"
-            defaultValue="25 条"
-          >
-            <option>10 条</option>
-            <option>25 条</option>
-            <option>50 条</option>
-          </select>
+          <Select
+            size="sm"
+            variant="filter"
+            value={pageSize}
+            onChange={(val) => setPageSize(val)}
+            options={[
+              { value: '10 条', label: '10 条' },
+              { value: '25 条', label: '25 条' },
+              { value: '50 条', label: '50 条' },
+            ]}
+          />
           <span className="ml-2">共 128 位成员</span>
         </div>
         <div className="flex items-center gap-1.5">

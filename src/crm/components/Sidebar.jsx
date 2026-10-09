@@ -76,48 +76,6 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* User Identity & Dynamic Role Header */}
-        {!collapsed ? (
-          <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <img
-                src={
-                  auth.user?.avatar ||
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'
-                }
-                alt="Avatar"
-                className="w-9 h-9 rounded-xl object-cover ring-2 ring-brand-500/20 shrink-0"
-              />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                  {auth.user?.realName || '未登录'}
-                </div>
-                <div className="text-[10px] text-zinc-400 truncate flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="truncate">{auth.role?.name || '体验角色'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Collapsed Mini Avatar Header */
-          <div className="flex flex-col items-center py-2 border-b border-zinc-200/80 dark:border-zinc-800/80">
-            <div
-              className="relative cursor-pointer group"
-              title={`${auth.user?.realName || '用户'} (${auth.role?.name || '角色'})`}
-            >
-              <img
-                src={
-                  auth.user?.avatar ||
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop'
-                }
-                alt="Avatar"
-                className="w-8 h-8 rounded-xl object-cover ring-2 ring-brand-500/20"
-              />
-              <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
-            </div>
-          </div>
-        )}
 
         {/* Dynamic Left Nav Menu Loaded from Backend Permissions */}
         <div>

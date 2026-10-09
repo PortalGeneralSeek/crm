@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import Icon from '../../../../shared/Icon';
+import Select from '../../../../shared/Select';
 
 export default function AuditLogTable({ logs = [], onSelectLog, onExport }) {
   const [searchLog, setSearchLog] = useState('');
@@ -41,30 +42,34 @@ export default function AuditLogTable({ logs = [], onSelectLog, onExport }) {
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Category Filter */}
-          <select
+          <Select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 focus:outline-none"
-          >
-            <option value="all">全部分类事件</option>
-            <option value="permission">权限策略调整</option>
-            <option value="export">敏感数据导出</option>
-            <option value="auth">身份认证与爆破</option>
-            <option value="config">基础架构配置</option>
-            <option value="api_key">API 密钥生命周期</option>
-          </select>
+            onChange={(val) => setCategoryFilter(val)}
+            size="sm"
+            variant="filter"
+            options={[
+              { value: 'all', label: '全部分类事件' },
+              { value: 'permission', label: '权限策略调整' },
+              { value: 'export', label: '敏感数据导出' },
+              { value: 'auth', label: '身份认证与爆破' },
+              { value: 'config', label: '基础架构配置' },
+              { value: 'api_key', label: 'API 密钥生命周期' },
+            ]}
+          />
 
           {/* Risk Filter */}
-          <select
+          <Select
             value={riskFilter}
-            onChange={(e) => setRiskFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 focus:outline-none"
-          >
-            <option value="all">全部风险等级</option>
-            <option value="critical">高危事件 (Critical)</option>
-            <option value="high">重要操作 (High)</option>
-            <option value="low">常规操作 (Low)</option>
-          </select>
+            onChange={(val) => setRiskFilter(val)}
+            size="sm"
+            variant="filter"
+            options={[
+              { value: 'all', label: '全部风险等级' },
+              { value: 'critical', label: '高危事件 (Critical)' },
+              { value: 'high', label: '重要操作 (High)' },
+              { value: 'low', label: '常规操作 (Low)' },
+            ]}
+          />
 
           {/* Export Audit Log Button */}
           <button

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Icon from '../../../../shared/Icon';
+import Select from '../../../../shared/Select';
 
 export default function IpRulesCard({ rules, onToggleRule, onAddRule, onDeleteRule }) {
   const [showModal, setShowModal] = useState(false);
@@ -156,14 +157,16 @@ export default function IpRulesCard({ rules, onToggleRule, onAddRule, onDeleteRu
                 <label className="block font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                   动作策略
                 </label>
-                <select
+                <Select
                   value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs focus:ring-2 focus:ring-primary/40 focus:outline-none"
-                >
-                  <option value="allow">允许访问 (ALLOW)</option>
-                  <option value="block">阻止拦截 (BLOCK)</option>
-                </select>
+                  onChange={(val) => setForm({ ...form, type: val })}
+                  fullWidth
+                  size="md"
+                  options={[
+                    { value: 'allow', label: '允许访问 (ALLOW)' },
+                    { value: 'block', label: '阻止拦截 (BLOCK)' },
+                  ]}
+                />
               </div>
 
               <div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Icon from '../../shared/Icon';
+import Select from '../../shared/Select';
 import { crmApi, useAuth } from '../services/crmApi';
 import { useToast } from '../hooks/useToast';
 
@@ -244,16 +245,18 @@ export default function Customers({ active, onOpenFollowup }) {
                 className="w-full pl-9 pr-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none focus:border-brand-500"
               />
             </div>
-            <select
+            <Select
               value={tierFilter}
-              onChange={(e) => setTierFilter(e.target.value)}
-              className="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none"
-            >
-              <option value="">全部客群层级</option>
-              <option value="VIP">VIP 重点客户</option>
-              <option value="KA">KA 战略大客</option>
-              <option value="SMB">SMB 中小客群</option>
-            </select>
+              onChange={(val) => setTierFilter(val)}
+              size="sm"
+              variant="filter"
+              options={[
+                { value: '', label: '全部客群层级' },
+                { value: 'VIP', label: 'VIP 重点客户' },
+                { value: 'KA', label: 'KA 战略大客' },
+                { value: 'SMB', label: 'SMB 中小客群' },
+              ]}
+            />
           </div>
           <div className="text-xs text-zinc-400">
             当前私海承载: <span className="font-bold text-brand-600">{customers.length}</span> / 50 家
@@ -407,15 +410,17 @@ export default function Customers({ active, onOpenFollowup }) {
                   <label className="block font-semibold mb-1 text-zinc-700 dark:text-zinc-300">
                     客群评级 (Tier)
                   </label>
-                  <select
+                  <Select
                     value={formData.tier}
-                    onChange={(e) => setFormData({ ...formData, tier: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500"
-                  >
-                    <option value="VIP">VIP 重点客户</option>
-                    <option value="KA">KA 战略大客户</option>
-                    <option value="SMB">SMB 中小微客户</option>
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, tier: val })}
+                    fullWidth
+                    size="md"
+                    options={[
+                      { value: 'VIP', label: 'VIP 重点客户' },
+                      { value: 'KA', label: 'KA 战略大客户' },
+                      { value: 'SMB', label: 'SMB 中小微客户' },
+                    ]}
+                  />
                 </div>
               </div>
 

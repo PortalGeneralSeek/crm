@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Icon from '../../shared/Icon';
+import Select from '../../shared/Select';
 import { crmApi } from '../services/crmApi';
 import { useToast } from '../hooks/useToast';
 
@@ -265,17 +266,19 @@ export default function Products({ active }) {
               <label className="block font-semibold mb-1 text-zinc-700 dark:text-zinc-300">
                 商业折扣授权比例
               </label>
-              <select
+              <Select
                 id="cpq-discount"
                 value={discountRatio}
-                onChange={(e) => setDiscountRatio(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none"
-              >
-                <option value="1.0">原价 (100% 无折扣)</option>
-                <option value="0.9">大客户基础折扣 (90折 · 销售经理权签)</option>
-                <option value="0.85">重点战略大客户折扣 (85折 · 销售总监权签)</option>
-                <option value="0.75">年度特批破局底价 (75折 · 需战区副总审批)</option>
-              </select>
+                onChange={(val) => setDiscountRatio(val)}
+                fullWidth
+                size="md"
+                options={[
+                  { value: '1.0', label: '原价 (100% 无折扣)' },
+                  { value: '0.9', label: '大客户基础折扣 (90折 · 销售经理权签)' },
+                  { value: '0.85', label: '重点战略大客户折扣 (85折 · 销售总监权签)' },
+                  { value: '0.75', label: '年度特批破局底价 (75折 · 需战区副总审批)' },
+                ]}
+              />
             </div>
 
             {/* Price Result Box */}
@@ -341,16 +344,18 @@ export default function Products({ active }) {
                   <label className="block font-semibold mb-1 text-zinc-700 dark:text-zinc-300">
                     产品类别
                   </label>
-                  <select
+                  <Select
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500"
-                  >
-                    <option value="软件平台">软件平台</option>
-                    <option value="硬件算力">硬件算力</option>
-                    <option value="专业服务">专业服务</option>
-                    <option value="订阅服务">订阅服务</option>
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, category: val })}
+                    fullWidth
+                    size="md"
+                    options={[
+                      { value: '软件平台', label: '软件平台' },
+                      { value: '硬件算力', label: '硬件算力' },
+                      { value: '专业服务', label: '专业服务' },
+                      { value: '订阅服务', label: '订阅服务' },
+                    ]}
+                  />
                 </div>
               </div>
 

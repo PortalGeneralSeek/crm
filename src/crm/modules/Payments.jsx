@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Icon from '../../shared/Icon';
+import Select from '../../shared/Select';
 import { crmApi } from '../services/crmApi';
 import { useToast } from '../hooks/useToast';
 
@@ -194,16 +195,18 @@ export default function Payments({ active }) {
               className="w-full pl-9 pr-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none focus:border-brand-500"
             />
           </div>
-          <select
+          <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none"
-          >
-            <option value="">全部对账状态</option>
-            <option value="pending">待财务审核 (pending)</option>
-            <option value="audited">已审核到账 (audited)</option>
-            <option value="rejected">已驳回 (rejected)</option>
-          </select>
+            onChange={(val) => setStatusFilter(val)}
+            size="sm"
+            variant="filter"
+            options={[
+              { value: '', label: '全部对账状态' },
+              { value: 'pending', label: '待财务审核 (pending)' },
+              { value: 'audited', label: '已审核到账 (audited)' },
+              { value: 'rejected', label: '已驳回 (rejected)' },
+            ]}
+          />
         </div>
         <div className="text-xs text-zinc-400">
           共收录回款: <span className="font-bold text-brand-600">{total}</span> 笔
@@ -359,15 +362,17 @@ export default function Payments({ active }) {
                   <label className="block font-semibold mb-1 text-zinc-700 dark:text-zinc-300">
                     款项性质
                   </label>
-                  <select
+                  <Select
                     value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500"
-                  >
-                    <option value="prepayment">首付款 (预付款)</option>
-                    <option value="milestone">阶段进度款</option>
-                    <option value="final">尾款结清</option>
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, type: val })}
+                    fullWidth
+                    size="md"
+                    options={[
+                      { value: 'prepayment', label: '首付款 (预付款)' },
+                      { value: 'milestone', label: '阶段进度款' },
+                      { value: 'final', label: '尾款结清' },
+                    ]}
+                  />
                 </div>
               </div>
 
