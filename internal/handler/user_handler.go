@@ -9,6 +9,7 @@ import (
 	"crm-backend/internal/cache"
 	"crm-backend/internal/database"
 	"crm-backend/internal/model"
+	"crm-backend/internal/service"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -65,6 +66,7 @@ type CreateUserRequest struct {
 	Password string `json:"password"`
 	RealName string `json:"realName"`
 	RoleID   uint   `json:"roleId"`
+	Branch   string `json:"branch"`
 	Phone    string `json:"phone"`
 	Email    string `json:"email"`
 	Avatar   string `json:"avatar"`
@@ -142,6 +144,11 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 		avatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop"
 	}
 
+	branch := strings.TrimSpace(req.Branch)
+	if branch == "" {
+		branch = "华东分公司"
+	}
+
 	newUser := model.SysUser{
 		Username:     req.Username,
 		PasswordHash: string(hash),
@@ -149,6 +156,7 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
 		Avatar:       avatar,
 		Email:        req.Email,
 		Phone:        req.Phone,
+		Branch:       branch,
 		RoleID:       req.RoleID,
 		Status:       1,
 		CreatedAt:    time.Now(),
@@ -352,6 +360,10 @@ func (h *UserHandler) ResetPassword(c *fiber.Ctx) error {
 		})
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	cache.Rdb.InvalidateUserCache(ctx, uint(userID))
+
 	return c.JSON(fiber.Map{
 		"code":    200,
 		"message": "用户密码已成功重置",
@@ -392,3 +404,39 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 		"message": "用户账号已成功删除",
 	})
 }
+
+// GetUserPermissions returns effective permissions and menus for a specific user
+func (h *UserHandler) GetUserPermissions(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	userID, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    400,
+			"message": "无效的用户 ID",
+		})
+	}
+
+	var user model.SysUser
+	if err := database.DB.Preload("Role").First(&user, userID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"code":    404,
+			"message": "用户不存在",
+		})
+	}
+
+	permService := service.NewPermissionService()
+	perms := permService.GetUserPermissions(user.RoleID, user.Role.Code)
+	menus := permService.GetUserMenuTree(user.RoleID, user.Role.Code)
+
+	return c.JSON(fiber.Map{
+		"code":    200,
+		"message": "ok",
+		"data": fiber.Map{
+			"user":        user,
+			"role":        user.Role,
+			"permissions": perms,
+			"menus":       menus,
+		},
+	})
+}
+

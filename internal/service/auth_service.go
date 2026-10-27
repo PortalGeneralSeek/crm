@@ -67,6 +67,7 @@ func (s *AuthService) Login(username, password string) (*LoginResult, error) {
 		Username: user.Username,
 		RoleID:   activeRole.ID,
 		RoleCode: activeRole.Code,
+		Branch:   user.Branch,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -150,6 +151,7 @@ func (s *AuthService) SwitchRole(userID uint, targetRoleID uint) (*LoginResult, 
 		Username: user.Username,
 		RoleID:   targetRole.ID,
 		RoleCode: targetRole.Code,
+		Branch:   user.Branch,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

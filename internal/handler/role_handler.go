@@ -255,6 +255,10 @@ func (h *RoleHandler) UpdateRolePermissions(c *fiber.Ctx) error {
 	// Invalidate related user cache in Redis
 	var userIDs []uint
 	database.DB.Model(&model.SysUser{}).Where("role_id = ?", roleID).Pluck("id", &userIDs)
+	var additionalUIDs []uint
+	database.DB.Model(&model.SysUserRole{}).Where("role_id = ?", roleID).Pluck("user_id", &additionalUIDs)
+	userIDs = append(userIDs, additionalUIDs...)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	for _, uid := range userIDs {

@@ -1,7 +1,13 @@
 package handler
 
 import (
+	"crypto/sha256"
+	"fmt"
+	"strings"
+	"time"
+
 	"crm-backend/config"
+	"crm-backend/internal/cache"
 	"crm-backend/internal/database"
 	"crm-backend/internal/model"
 	"crm-backend/internal/service"
@@ -195,8 +201,43 @@ func (h *AuthHandler) ChangePassword(c *fiber.Ctx) error {
 	audit := service.NewAuditService()
 	audit.Record(userID, username, roleCode, "个人中心", "自助修改登录密码", "POST", "/api/v1/auth/change-password", c.IP(), "成功更新账户登录凭据")
 
+	// Revoke current token upon password change
+	authHeader := c.Get("Authorization")
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) == 2 && parts[0] == "Bearer" {
+		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(parts[1])))
+		_ = cache.Rdb.AddTokenToBlacklist(c.Context(), tokenHash, 24*time.Hour)
+	}
+	cache.Rdb.InvalidateUserCache(c.Context(), userID)
+
 	return c.JSON(fiber.Map{
 		"code":    200,
-		"message": "密码修改成功，新密码即刻生效",
+		"message": "密码修改成功，当前登录令牌已安全重置，请使用新密码重新登录",
 	})
 }
+
+// Logout revokes active JWT token and cleans up user cache
+func (h *AuthHandler) Logout(c *fiber.Ctx) error {
+	userID, _ := c.Locals("userId").(uint)
+	username, _ := c.Locals("username").(string)
+	roleCode, _ := c.Locals("roleCode").(string)
+
+	authHeader := c.Get("Authorization")
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) == 2 && parts[0] == "Bearer" {
+		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(parts[1])))
+		_ = cache.Rdb.AddTokenToBlacklist(c.Context(), tokenHash, 24*time.Hour)
+	}
+
+	if userID > 0 {
+		cache.Rdb.InvalidateUserCache(c.Context(), userID)
+		audit := service.NewAuditService()
+		audit.Record(userID, username, roleCode, "用户中心", "安全退出登录", "POST", "/api/v1/auth/logout", c.IP(), "主动注销当前 JWT 会话凭证")
+	}
+
+	return c.JSON(fiber.Map{
+		"code":    200,
+		"message": "已安全退出登录并注销令牌",
+	})
+}
+

@@ -121,3 +121,28 @@ func (r *RedisClient) InvalidateUserCache(ctx context.Context, userID uint) {
 	menuKey := fmt.Sprintf("crm:menus:user:%d", userID)
 	_ = r.Del(ctx, key, menuKey)
 }
+
+// JWT Token Blacklist for immediate revocation upon logout or user deactivation
+func (r *RedisClient) AddTokenToBlacklist(ctx context.Context, tokenHash string, ttl time.Duration) error {
+	key := fmt.Sprintf("crm:jwt:blacklist:%s", tokenHash)
+	return r.Set(ctx, key, "revoked", ttl)
+}
+
+func (r *RedisClient) IsTokenBlacklisted(ctx context.Context, tokenHash string) bool {
+	key := fmt.Sprintf("crm:jwt:blacklist:%s", tokenHash)
+	var val string
+	err := r.Get(ctx, key, &val)
+	return err == nil && val == "revoked"
+}
+
+func (r *RedisClient) FlushAll(ctx context.Context) error {
+	if r.isFallback {
+		r.memLock.Lock()
+		defer r.memLock.Unlock()
+		r.memStore = make(map[string]memItem)
+		return nil
+	}
+	return r.client.FlushDB(ctx).Err()
+}
+
+

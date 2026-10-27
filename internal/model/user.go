@@ -22,6 +22,7 @@ type SysUser struct {
 	Avatar       string        `gorm:"size:255" json:"avatar"`
 	Email        string        `gorm:"size:128" json:"email"`
 	Phone        string        `gorm:"size:32" json:"phone"`
+	Branch       string        `gorm:"size:64;default:'华东分公司'" json:"branch"`
 	RoleID       uint          `gorm:"not null" json:"roleId"`
 	Role         SysRole       `gorm:"foreignKey:RoleID" json:"role"`
 	Status       int           `gorm:"default:1" json:"status"`
