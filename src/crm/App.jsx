@@ -3,6 +3,7 @@ import FollowupDrawer from './components/FollowupDrawer';
 import Header from './components/Header';
 import NewDealModal from './components/NewDealModal';
 import NewLeadModal from './components/NewLeadModal';
+import NewsFlashAlerts from './components/NewsFlashAlerts';
 import Sidebar from './components/Sidebar';
 import { moduleTitles } from './data/moduleTitles';
 import { ToastProvider, useToast } from './hooks/useToast';
@@ -22,6 +23,10 @@ const Products = lazy(() => import('./modules/Products'));
 const Leaderboard = lazy(() => import('./modules/Leaderboard'));
 const Analytics = lazy(() => import('./modules/Analytics'));
 const AiCopilot = lazy(() => import('./modules/AiCopilot'));
+const MarketMonitor = lazy(() => import('./modules/MarketMonitor'));
+const MarketKline = lazy(() => import('./modules/MarketKline'));
+const UsStocks = lazy(() => import('./modules/UsStocks'));
+const UsStockKline = lazy(() => import('./modules/UsStockKline'));
 const Settings = lazy(() => import('./modules/Settings'));
 
 function ModuleSkeleton() {
@@ -50,8 +55,26 @@ function Workspace() {
 
   // If user is not logged in, enforce view = 'login'
   const view = !auth.isLoggedIn || path === '/login' ? 'login' : 'workbench';
-  const rawModule = path === '/login' ? 'dashboard' : path.replace(/^\//, '');
-  const activeModule = moduleTitles[rawModule] ? rawModule : 'dashboard';
+  const cleanPath = path === '/login' ? 'dashboard' : path.replace(/^\//, '');
+  const pathParts = cleanPath.split('/');
+  const baseModule = pathParts[0] || 'dashboard';
+  const activeModule = moduleTitles[baseModule] ? baseModule : 'dashboard';
+
+  // Sub-tab for settings
+  const settingsTab =
+    baseModule === 'settings' && ['users', 'roles', 'audit'].includes(pathParts[1])
+      ? pathParts[1]
+      : 'users';
+
+  // #/market-monitor/kline/<encodeURIComponent(symbol)> 与 #/us-stocks/kline/<symbol>
+  const klineSymbol = (() => {
+    if (!['market-monitor', 'us-stocks'].includes(baseModule) || pathParts[1] !== 'kline') return null;
+    try {
+      return decodeURIComponent(pathParts[2] || '');
+    } catch {
+      return '';
+    }
+  })();
 
   const [navigationCount, setNavigationCount] = useState(0);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -84,16 +107,20 @@ function Workspace() {
     });
   };
 
-  // Auth route guard: enforce login by default
+  // Auth route guard: enforce login by default & auto-enter workbench upon login
   useEffect(() => {
     if (!auth.isLoggedIn && path !== '/login') {
       navigate('/login');
+    } else if (auth.isLoggedIn && path === '/login') {
+      navigate('/dashboard');
+      setTimeout(() => dashboardRef.current?.resizeChart(), 100);
     }
   }, [auth.isLoggedIn, path, navigate]);
 
   const switchView = (viewName) => {
     if (viewName === 'workbench') {
-      if (!auth.isLoggedIn) {
+      const isLogged = authStore.getSnapshot().isLoggedIn;
+      if (!isLogged) {
         showToast('请先登录系统认证身份', 'warning');
         navigate('/login');
         return;
@@ -107,12 +134,18 @@ function Workspace() {
 
   const handleLogout = () => {
     authStore.logout();
+    window.location.hash = '#/login';
     navigate('/login');
-    showToast('您已成功退出工作台');
+    showToast('您已安全退出工作台并注销会话', 'info');
+    crmApi.logout().catch(() => {});
   };
 
   const switchModule = (moduleKey) => {
-    navigate(`/${moduleKey}`);
+    if (moduleKey === 'settings') {
+      navigate(`/settings/${settingsTab}`);
+    } else {
+      navigate(`/${moduleKey}`);
+    }
     setNavigationCount((n) => n + 1);
     if (moduleKey === 'dashboard') {
       setTimeout(() => dashboardRef.current?.resizeChart(), 60);
@@ -120,9 +153,19 @@ function Workspace() {
     showToast(`已进入: ${moduleTitles[moduleKey] || moduleKey}`);
   };
 
+  const handleSwitchSettingsTab = (tab) => {
+    navigate(`/settings/${tab}`);
+    setNavigationCount((n) => n + 1);
+  };
+
   useLayoutEffect(() => {
     if (navigationCount > 0) mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [navigationCount]);
+
+  const inKline = klineSymbol !== null;
+  useLayoutEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [inKline]);
 
   const handleToggleTheme = () => {
     const nextIsDark = toggleTheme();
@@ -153,6 +196,20 @@ function Workspace() {
 
   const isActive = (key) => activeModule === key;
 
+  const settingsTabTitles = {
+    users: '系统设置 · 成员账号管理',
+    roles: '系统设置 · 角色权限矩阵配置',
+    audit: '系统设置 · 操作安全审计日志',
+  };
+  const headerTitle =
+    activeModule === 'settings'
+      ? settingsTabTitles[settingsTab] || moduleTitles.settings
+      : klineSymbol !== null
+      ? activeModule === 'us-stocks'
+        ? '美股核心科技 · 个股 K 线图表'
+        : '全球宏观 · 大类资产 K 线图表'
+      : moduleTitles[activeModule];
+
   return (
     <>
       <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-[#09090b]" />}>
@@ -169,7 +226,7 @@ function Workspace() {
         className={`view-transition flex flex-col flex-1 h-screen overflow-hidden${view === 'login' ? ' view-hidden' : ''}`}
       >
         <Header
-          title={moduleTitles[activeModule]}
+          title={headerTitle}
           notificationsOpen={notificationsOpen}
           onToggleNotifications={() => setNotificationsOpen((open) => !open)}
           onNewDeal={() => setDealModalOpen(true)}
@@ -187,6 +244,8 @@ function Workspace() {
         <div className="flex-1 flex overflow-hidden">
           <Sidebar
             activeModule={activeModule}
+            settingsTab={settingsTab}
+            onSwitchSettingsTab={handleSwitchSettingsTab}
             hasNavigated={navigationCount > 0}
             onSwitchModule={switchModule}
             collapsed={sidebarCollapsed}
@@ -229,7 +288,23 @@ function Workspace() {
               {isActive('leaderboard') && <Leaderboard active={true} />}
               {isActive('analytics') && <Analytics active={true} isDark={isDark} />}
               {isActive('ai-copilot') && <AiCopilot active={true} />}
-              {isActive('settings') && <Settings active={true} />}
+              {isActive('market-monitor') && klineSymbol === null && (
+                <MarketMonitor active={true} isDark={isDark} />
+              )}
+              {isActive('market-monitor') && klineSymbol !== null && (
+                <MarketKline symbol={klineSymbol} isDark={isDark} onNavigate={navigate} />
+              )}
+              {isActive('us-stocks') && klineSymbol === null && <UsStocks active={true} />}
+              {isActive('us-stocks') && klineSymbol !== null && (
+                <UsStockKline symbol={klineSymbol} isDark={isDark} onNavigate={navigate} />
+              )}
+              {isActive('settings') && (
+                <Settings
+                  active={true}
+                  activeTab={settingsTab}
+                  onChangeTab={handleSwitchSettingsTab}
+                />
+              )}
             </Suspense>
           </main>
         </div>
@@ -249,6 +324,7 @@ function Workspace() {
         company={followupCompany}
         onClose={() => setFollowupOpen(false)}
       />
+      {auth.isLoggedIn && <NewsFlashAlerts />}
     </>
   );
 }

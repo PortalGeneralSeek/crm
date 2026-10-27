@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Icon from '../../shared/Icon';
 import { useToast } from '../hooks/useToast';
 import { crmApi } from '../services/crmApi';
@@ -12,21 +12,29 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
   const showToast = useToast();
   const [tab, setTab] = useState('account');
   const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState('director');
-  const [password, setPassword] = useState('director123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const onEnterWorkbenchRef = useRef(onEnterWorkbench);
+  useEffect(() => {
+    onEnterWorkbenchRef.current = onEnterWorkbench;
+  }, [onEnterWorkbench]);
 
   const tabClass = (key) => (tab === key ? ACTIVE_TAB : INACTIVE_TAB);
 
   const performLogin = async (u, p) => {
+    if (loading) return;
     setLoading(true);
     try {
       const res = await crmApi.login(u, p);
       showToast(
-        `身份验证成功！欢迎 ${res.data.user.realName}，已根据角色 [${res.data.role.name}] 动态重载菜单与权限。`,
+        `身份验证成功！欢迎 ${res.data.user?.realName || u}，已根据角色 [${res.data.role?.name || '默认'}] 动态重载菜单与权限。`,
         'success'
       );
-      setTimeout(onEnterWorkbench, 350);
+      if (onEnterWorkbenchRef.current) {
+        onEnterWorkbenchRef.current();
+      }
     } catch (err) {
       showToast(`登录失败: ${err.message}`, 'error');
     } finally {
@@ -135,54 +143,53 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
           {/* Right Column: Login Interactive Form (7 cols) */}
           <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between bg-white dark:bg-zinc-900">
             <div>
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-start justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
                     欢迎登录领航 CRM
                   </h2>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                    请输入您的企业账号或使用 SSO 单点登录
+                    企业级智能销售赋能云 · 统一身份认证中心
                   </p>
                 </div>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold text-blue-700 dark:text-blue-300">
-                  <Icon name="shield-check" className="w-3.5 h-3.5" /> ISO 27001 认证
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 shadow-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  零信任内存凭证防护
                 </span>
               </div>
-              {/* Login Method Tabs */}
-              <div className="flex border-b border-zinc-200 dark:border-zinc-800 mb-6 space-x-6 text-sm">
-                <button
-                  id="tab-login-account"
-                  onClick={() => setTab('account')}
-                  className={tabClass('account')}
-                >
-                  企业账号密码
-                </button>
-                <button
-                  id="tab-login-sms"
-                  onClick={() => setTab('sms')}
-                  className={tabClass('sms')}
-                >
-                  手机短信免密
-                </button>
-                <button
-                  id="tab-login-qrcode"
-                  onClick={() => setTab('qrcode')}
-                  className={tabClass('qrcode')}
-                >
-                  企微 / 钉钉扫码
-                </button>
+
+              {/* Login Method Indicator Strip (替代单 Tab 样式，呈现高品质专业感) */}
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 mb-6">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-brand-500/10 dark:bg-blue-500/15 border border-brand-500/20 flex items-center justify-center text-brand-600 dark:text-blue-400">
+                    <Icon name="key-round" className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 block">
+                      企业账号与安全密码登录
+                    </span>
+                    <span className="text-[10px] text-zinc-400 dark:text-zinc-500">
+                      标准企业通行通道 · 纯内存状态保护
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium font-mono">
+                  <Icon name="shield-check" className="w-3.5 h-3.5" />
+                  <span>加密通道</span>
+                </div>
               </div>
-              {/* Form: Account & Password */}
+
+              {/* Form: Account & Password (第一种登录方式：保留) */}
               <form
                 id="login-form-account"
                 onSubmit={handleLoginSubmit}
-                className={tab === 'account' ? 'space-y-4' : 'space-y-4 hidden'}
+                className="space-y-4"
               >
                 <div>
                   <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
                     企业账号 / 员工工号
                   </label>
-                  <div className="relative rounded-xl shadow-sm">
+                  <div className="relative rounded-xl shadow-xs">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
                       <Icon name="user" className="w-4 h-4" />
                     </div>
@@ -192,8 +199,8 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       required
-                      placeholder="请输入您的企业账号或工号 (如: director)"
-                      className="block w-full pl-10 pr-3 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:ring-blue-500 transition-colors"
+                      placeholder="请输入企业账号"
+                      className="block w-full pl-10 pr-3 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:ring-blue-500 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -213,7 +220,7 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
                       忘记密码？
                     </a>
                   </div>
-                  <div className="relative rounded-xl shadow-sm">
+                  <div className="relative rounded-xl shadow-xs">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
                       <Icon name="lock" className="w-4 h-4" />
                     </div>
@@ -224,12 +231,12 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       placeholder="输入企业登录密码"
-                      className="block w-full pl-10 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:ring-blue-500 transition-colors font-mono"
+                      className="block w-full pl-10 pr-10 py-2.5 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:ring-blue-500 transition-all font-mono"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer"
                     >
                       <Icon
                         name={showPassword ? 'eye-off' : 'eye'}
@@ -247,18 +254,18 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
                       className="w-4 h-4 text-brand-600 rounded border-zinc-300 dark:border-zinc-700 focus:ring-brand-500"
                     />
                     <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                      记住此工作设备 (30天内免密)
+                      记住此工作设备 (纯内存保持)
                     </span>
                   </label>
                   <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
-                    <Icon name="check-circle" className="w-3 h-3" />
-                    GoFiber 后端连接中
+                    <Icon name="check-circle" className="w-3.5 h-3.5" />
+                    GoFiber 后端在线
                   </span>
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full mt-2 py-3 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2 group"
+                  className="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-brand-500 to-blue-600 hover:from-brand-600 hover:to-blue-700 active:from-brand-700 active:to-blue-800 text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2 group cursor-pointer"
                 >
                   <span>{loading ? '正在验证身份与动态权限...' : '登 录 进 入 工 作 台'}</span>
                   <Icon
@@ -267,7 +274,30 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
                   />
                 </button>
               </form>
-              {/* SMS Tab */}
+
+              {/* Security & Reliability Highlights Strip */}
+              <div className="mt-6 p-3 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-800 grid grid-cols-3 gap-2 text-center">
+                <div className="flex flex-col items-center">
+                  <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                    <Icon name="shield" className="w-3.5 h-3.5 text-brand-500" /> 内存零信任
+                  </span>
+                  <span className="text-[9px] text-zinc-400 mt-0.5">杜绝 XSS 凭证泄露</span>
+                </div>
+                <div className="flex flex-col items-center border-x border-zinc-200/60 dark:border-zinc-700/60">
+                  <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                    <Icon name="git-merge" className="w-3.5 h-3.5 text-indigo-500" /> RBAC 细粒度
+                  </span>
+                  <span className="text-[9px] text-zinc-400 mt-0.5">分公司数据隔离</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                    <Icon name="server" className="w-3.5 h-3.5 text-emerald-500" /> GoFiber 内核
+                  </span>
+                  <span className="text-[9px] text-zinc-400 mt-0.5">毫秒级极速响应</span>
+                </div>
+              </div>
+              {/* 
+              备用登录方式 1: 手机短信免密登录组件
               <div id="login-form-sms" className={tab === 'sms' ? 'space-y-4' : 'hidden space-y-4'}>
                 <div>
                   <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
@@ -305,13 +335,15 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
                 </div>
                 <button
                   type="button"
-                  onClick={() => enterWorkbench('手机短信验证成功，已进入销售系统！')}
+                  onClick={() => performLogin('director', 'director123')}
                   className="w-full mt-2 py-3 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2"
                 >
                   <span>验证并登录</span>
                 </button>
               </div>
-              {/* QR Code Tab */}
+              */}
+              {/* 
+              备用登录方式 2: 企微 / 钉钉扫码登录组件
               <div
                 id="login-form-qrcode"
                 className={
@@ -345,15 +377,17 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
                 </div>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
                   使用 企业微信 / 飞书 / 钉钉 App 扫码快速授权
-                </p>{' '}
+                </p>
                 <button
-                  onClick={() => enterWorkbench('企微扫码授权成功，欢迎回来！')}
+                  onClick={() => performLogin('director', 'director123')}
                   className="text-xs text-brand-600 dark:text-blue-400 hover:underline"
                 >
                   [模拟扫码完成一键授权]
                 </button>
               </div>
-              {/* Enterprise SSO Divider */}
+              */}
+              {/* 
+              备用登录方式 3: 企业统一身份 SSO
               <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
                 <div className="text-center relative">
                   <span className="bg-white dark:bg-zinc-900 px-3 text-xs text-zinc-400 font-medium relative -top-2.5">
@@ -362,28 +396,28 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
                 </div>
                 <div className="grid grid-cols-4 gap-2.5 mt-2">
                   <button
-                    onClick={() => enterWorkbench('企业微信 SSO 登录成功')}
+                    onClick={() => performLogin('director', 'director123')}
                     className="flex flex-col items-center justify-center py-2 px-1 border border-zinc-200 dark:border-zinc-700/80 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors"
                   >
                     <Icon name="message-square" className="w-4 h-4 text-emerald-600 mb-1" />
                     <span className="text-[11px] text-zinc-600 dark:text-zinc-300">企业微信</span>
                   </button>
                   <button
-                    onClick={() => enterWorkbench('飞书 SSO 登录成功')}
+                    onClick={() => performLogin('director', 'director123')}
                     className="flex flex-col items-center justify-center py-2 px-1 border border-zinc-200 dark:border-zinc-700/80 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors"
                   >
                     <Icon name="send" className="w-4 h-4 text-blue-500 mb-1" />
                     <span className="text-[11px] text-zinc-600 dark:text-zinc-300">飞书</span>
                   </button>
                   <button
-                    onClick={() => enterWorkbench('钉钉 SSO 登录成功')}
+                    onClick={() => performLogin('director', 'director123')}
                     className="flex flex-col items-center justify-center py-2 px-1 border border-zinc-200 dark:border-zinc-700/80 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors"
                   >
                     <Icon name="zap" className="w-4 h-4 text-amber-500 mb-1" />
                     <span className="text-[11px] text-zinc-600 dark:text-zinc-300">钉钉</span>
                   </button>
                   <button
-                    onClick={() => enterWorkbench('SAML 2.0 登录成功')}
+                    onClick={() => performLogin('director', 'director123')}
                     className="flex flex-col items-center justify-center py-2 px-1 border border-zinc-200 dark:border-zinc-700/80 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors"
                   >
                     <Icon name="key-round" className="w-4 h-4 text-purple-500 mb-1" />
@@ -391,6 +425,7 @@ export default function LoginView({ hidden, onEnterWorkbench, isDark, onToggleTh
                   </button>
                 </div>
               </div>
+              */}
             </div>
             <div className="mt-8 text-center text-xs text-zinc-400 dark:text-zinc-500 space-y-1">
               <p>

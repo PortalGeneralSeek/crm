@@ -377,11 +377,18 @@ export default function Header({
             </div>
           </button>
           <button
-            onClick={onLogout}
-            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            title="安全退出登录"
+            type="button"
+            id="header-logout-btn"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onLogout?.();
+            }}
+            className="flex items-center gap-1.5 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 px-2.5 py-1.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer border border-transparent hover:border-rose-200/60 dark:hover:border-rose-900/40"
+            title="安全退出登录并注销令牌"
           >
-            <Icon name="log-out" className="w-4 h-4" />
+            <Icon name="log-out" className="w-4 h-4 text-zinc-400 group-hover:text-rose-500" />
+            <span className="hidden sm:inline text-xs font-semibold">退出</span>
           </button>
         </div>
       </div>

@@ -1,7 +1,17 @@
 import { useSyncExternalStore } from 'react';
 
+// Legacy keys used only for wiping any historical remnant in browser storage
 const TOKEN_KEY = 'acme_crm_jwt_token';
 const AUTH_KEY = 'acme_crm_auth_session';
+
+try {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(AUTH_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(AUTH_KEY);
+} catch (e) {
+  // Ignore environments without storage access
+}
 
 const DEFAULT_AUTH = {
   token: '',
@@ -13,28 +23,11 @@ const DEFAULT_AUTH = {
   isLoggedIn: false,
 };
 
-let currentAuth = (() => {
-  try {
-    const raw = localStorage.getItem(AUTH_KEY);
-    if (raw) return { ...DEFAULT_AUTH, ...JSON.parse(raw) };
-  } catch (e) {
-    console.warn('[crmApi] parse session error', e);
-  }
-  return DEFAULT_AUTH;
-})();
+// Pure in-memory session and permission store (Never saved to localStorage or sessionStorage)
+let currentAuth = { ...DEFAULT_AUTH };
 
 const listeners = new Set();
 function notify() {
-  try {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(currentAuth));
-    if (currentAuth.token) {
-      localStorage.setItem(TOKEN_KEY, currentAuth.token);
-    } else {
-      localStorage.removeItem(TOKEN_KEY);
-    }
-  } catch (e) {
-    console.warn('[crmApi] save session error', e);
-  }
   listeners.forEach((l) => l());
 }
 
@@ -93,6 +86,10 @@ export function useAuth() {
     canDeleteUser: hasPermission('btn:user:delete'),
     canManageRoles: hasPermission('btn:role:edit'),
     canAddRole: hasPermission('btn:role:add'),
+    isBranchManager: auth.role?.code === 'sales_director' || auth.role?.code === 'super_admin' || hasPermission('btn:customer:reclaim'),
+    canReclaimCustomer: hasPermission('btn:customer:reclaim') || auth.role?.code === 'super_admin' || auth.role?.code === 'sales_director',
+    canAssignCustomer: hasPermission('btn:customer:assign') || auth.role?.code === 'super_admin' || auth.role?.code === 'sales_director',
+    canClaimCustomer: hasPermission('btn:customer:claim') || true,
   };
 }
 
@@ -102,7 +99,7 @@ async function request(url, options = {}) {
     ...(options.headers || {}),
   };
 
-  const token = currentAuth.token || localStorage.getItem(TOKEN_KEY);
+  const token = currentAuth.token;
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -136,6 +133,16 @@ export const crmApi = {
       authStore.setSession(res.data);
     }
     return res;
+  },
+
+  logout: async () => {
+    try {
+      await request('/api/v1/auth/logout', { method: 'POST' });
+    } catch (e) {
+      // Ignore network errors during logout
+    } finally {
+      authStore.logout();
+    }
   },
 
   getCurrentUser: async () => {
@@ -314,6 +321,10 @@ export const crmApi = {
     return request(`/api/v1/customers${qs ? `?${qs}` : ''}`);
   },
 
+  getCustomer: async (id) => {
+    return request(`/api/v1/customers/${id}`);
+  },
+
   createCustomer: async (customerData) => {
     return request('/api/v1/customers', {
       method: 'POST',
@@ -331,6 +342,26 @@ export const crmApi = {
   deleteCustomer: async (id) => {
     return request(`/api/v1/customers/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  reclaimCustomer: async (id, reason) => {
+    return request(`/api/v1/customers/${id}/reclaim`, {
+      method: 'PUT',
+      body: JSON.stringify({ reason }),
+    });
+  },
+
+  assignCustomer: async (id, targetUserId, note) => {
+    return request(`/api/v1/customers/${id}/assign`, {
+      method: 'PUT',
+      body: JSON.stringify({ targetUserId, note }),
+    });
+  },
+
+  claimCustomer: async (id) => {
+    return request(`/api/v1/customers/${id}/claim`, {
+      method: 'PUT',
     });
   },
 
@@ -391,6 +422,32 @@ export const crmApi = {
     });
   },
 
+  // Bank Statements & Association API (银行流水关联系统订单)
+  getBankStatements: async (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/v1/bank-statements${qs ? `?${qs}` : ''}`);
+  },
+
+  associateBankStatement: async (payload) => {
+    return request('/api/v1/bank-statements/associate', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  // Customer Entitlements API (客户权益与等价置换)
+  getCustomerEntitlements: async (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/v1/customer-entitlements${qs ? `?${qs}` : ''}`);
+  },
+
+  switchCustomerEntitlement: async (id, payload) => {
+    return request(`/api/v1/customer-entitlements/${id}/switch`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
   // Products API
   getProducts: async (params = {}) => {
     const qs = new URLSearchParams(params).toString();
@@ -430,4 +487,138 @@ export const crmApi = {
       body: JSON.stringify({ prompt }),
     });
   },
+
+  // Market & Macro Monitoring
+  getMarketQuotes: async () => {
+    return request('/api/v1/market/quotes');
+  },
+
+  getMarketNews: async () => {
+    return request('/api/v1/market/news');
+  },
+
+  getMarketMacro: async () => {
+    return request('/api/v1/market/macro');
+  },
+
+  getMarketPlaybook: async () => {
+    return request('/api/v1/market/playbook');
+  },
+  getUsStocks: async () => {
+    return request('/api/v1/market/stocks');
+  },
+
+  getMarketKlines: async (symbol, interval, limit, before) => {
+    const qs = new URLSearchParams({ symbol, interval: String(interval) });
+    if (limit) qs.set('limit', String(limit));
+    if (before) qs.set('before', String(before));
+    return request(`/api/v1/market/klines?${qs.toString()}`);
+  },
+
+  getAuthToken: () => currentAuth.token,
+
+  analyzeMarketAi: async (payload) => {
+    return request('/api/v1/market/ai-analysis', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  streamMarketAi: async (payload, onChunk, onComplete, onError, signal) => {
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      const token = currentAuth.token;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch('/api/v1/market/ai-analysis-stream', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+        signal,
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.message || `HTTP ${res.status}: 请求研报流失败`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      let completedCalled = false;
+      const safeComplete = (meta) => {
+        if (!completedCalled) {
+          completedCalled = true;
+          if (onComplete) onComplete(meta);
+        }
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith(':')) continue;
+          if (trimmed.startsWith('data: ')) {
+            const dataStr = trimmed.slice(6);
+            if (dataStr === '[DONE]') {
+              safeComplete();
+              continue;
+            }
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (parsed.delta || parsed.reasoning) {
+                onChunk(parsed.delta || '', parsed);
+              }
+              if (parsed.done) {
+                safeComplete(parsed);
+              }
+            } catch (e) {
+              onChunk(dataStr, {});
+            }
+          }
+        }
+      }
+
+      safeComplete();
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      if (onError) onError(err);
+      else throw err;
+    }
+  },
+
+  fetchMarketModels: async (baseUrl, apiKey) => {
+    return request('/api/v1/market/models', {
+      method: 'POST',
+      body: JSON.stringify({ baseUrl, apiKey }),
+    });
+  },
+
+  // User Permissions
+  getUserPermissions: async (userId) => {
+    return request(`/api/v1/users/${userId}/permissions`);
+  },
+
+  // System Management & Cache Governance
+  getSystemInfo: async () => {
+    return request('/api/v1/system/info');
+  },
+
+  flushCache: async () => {
+    return request('/api/v1/system/cache/flush', {
+      method: 'POST',
+    });
+  },
 };
+

@@ -20,11 +20,16 @@ const DEFAULT_AVATARS = [
   'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop',
 ];
 
-export default function Settings({ active }) {
+export default function Settings({ active, activeTab: controlledTab, onChangeTab }) {
   const showToast = useToast();
   const auth = useAuth();
 
-  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'roles' | 'audit'
+  const [internalTab, setInternalTab] = useState('users'); // 'users' | 'roles' | 'audit'
+  const activeTab = controlledTab !== undefined ? controlledTab : internalTab;
+  const setActiveTab = (tab) => {
+    setInternalTab(tab);
+    if (onChangeTab) onChangeTab(tab);
+  };
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [permTree, setPermTree] = useState([]);
@@ -423,45 +428,39 @@ export default function Settings({ active }) {
         </div>
       </div>
 
-      {/* Tab Switcher */}
-      <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab('users')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-              activeTab === 'users'
-                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
-                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-            }`}
-          >
-            <Icon name="users" className="w-4 h-4" />
-            <span>成员账号管理 ({users.length})</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('roles')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-              activeTab === 'roles'
-                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
-                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-            }`}
-          >
-            <Icon name="lock" className="w-4 h-4" />
-            <span>角色权限矩阵配置 ({roles.length})</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('audit')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-              activeTab === 'audit'
-                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
-                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-            }`}
-          >
-            <Icon name="file-text" className="w-4 h-4" />
-            <span>操作安全审计日志 ({auditTotal})</span>
-          </button>
+      {/* Sub-module Header & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500">系统设置 /</span>
+          <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+            {activeTab === 'users' && (
+              <>
+                <Icon name="users" className="w-5 h-5 text-brand-600 dark:text-blue-400" />
+                <span>成员账号管理</span>
+                <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                  {users.length} 人
+                </span>
+              </>
+            )}
+            {activeTab === 'roles' && (
+              <>
+                <Icon name="shield-check" className="w-5 h-5 text-brand-600 dark:text-blue-400" />
+                <span>角色权限矩阵配置</span>
+                <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                  {roles.length} 角色
+                </span>
+              </>
+            )}
+            {activeTab === 'audit' && (
+              <>
+                <Icon name="file-text" className="w-5 h-5 text-brand-600 dark:text-blue-400" />
+                <span>操作安全审计日志</span>
+                <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                  {auditTotal} 条流水
+                </span>
+              </>
+            )}
+          </h2>
         </div>
 
         {/* Action Button based on tab */}

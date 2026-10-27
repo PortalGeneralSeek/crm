@@ -191,11 +191,13 @@ export default function ProfileModal({ isOpen, onClose, onLogout }) {
             <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   onClose();
-                  if (onLogout) onLogout();
+                  onLogout?.();
                 }}
-                className="text-xs text-rose-500 hover:text-rose-600 font-medium flex items-center gap-1"
+                className="text-xs text-rose-500 hover:text-rose-600 font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
               >
                 <Icon name="log-out" className="w-3.5 h-3.5" />
                 <span>退出登录</span>

@@ -9,5 +9,8 @@ export const moduleTitles = {
   leaderboard: '数据与协同 · 全国各大战区销售排行榜',
   analytics: '数据与协同 · 销售 BI 商业智能与客群报表',
   'ai-copilot': '数据与协同 · 领航 AI 销售 Copilot 智能工作台',
-  settings: '系统管理 · 成员组织与权限控制中心',
+  'market-monitor': '全球宏观 · 大类资产实时监控与时政 AI 研判',
+  'us-stocks': '美股核心科技 · AI 产业链板块实时行情',
+  settings: '系统管理 · 系统设置与安全中心',
 };
+
