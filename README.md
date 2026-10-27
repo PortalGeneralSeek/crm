@@ -9,7 +9,7 @@
 ```text
 ├── back/        # Go 后端工程 (GoFiber + GORM + MySQL + Redis)
 ├── web/         # React 前端工程 (React 19 + Vite 8 + Tailwind CSS 3)
-├── .gitignore   # 全局 Git 忽略规则
+├── .gitignore   # 全局 Git 忽略规则 (严格忽略所有环境配置与凭据)
 └── README.md    # 项目根说明文档
 ```
 
@@ -33,11 +33,8 @@
 - **快速启动**：
   ```bash
   cd back
-  cp .env.example .env   # 配置数据库与 Redis 连接
+  # 本地根据环境配置 .env (已被 .gitignore 严格忽略，避免泄露)
   go build -o bin/server cmd/server/main.go
-  ./bin/server           # 默认监听 127.0.0.1:8080
+  ./bin/server     # 默认监听 127.0.0.1:8080
   ```
 - 详见 [back/README.md](back/README.md)。
-
----
-
