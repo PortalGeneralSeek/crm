@@ -1,0 +1,29 @@
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.sublime-project
+*.sublime-workspace
+
+# Global logs & env
+*.log
+.env
+.env.local
+.env.*.local
+
+# Backend ignores
+back/bin/
+back/.env
+back/*.log
+back/*.jsonl
+back/financialjuice_macro.json*
+
+# Frontend ignores
+web/node_modules/
+web/dist/
+web/dist-ssr/
+web/.env
+web/.env.local
+web/.env.*.local
