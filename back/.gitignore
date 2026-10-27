@@ -1,0 +1,5 @@
+bin/
+.env
+*.log
+*.jsonl
+financialjuice_macro.json*
